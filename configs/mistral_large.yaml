@@ -1,0 +1,61 @@
+# Experiment configuration
+# This configuration file sets the parameters for running the experiment.
+
+# Experiment settings
+STUDY_NAME: "240513_MistralLarge"  # The folder to store the experiment results
+N_RUN: 50  # The number of times to run the experiment
+LOAD_GENERATED_DATA: True  # Whether to load the already generated data for the Sampler
+RANDOM_SEED_VAL: 292  # The random seed value to use
+OP_LIST:  # The list of operations to perform
+  - "union"
+  - "intersection"
+  - "difference"
+  - "symmetric difference"
+  # - "cartesian product" # (Not All Runs include this - Mostly 0% Accuracy)
+MODEL_NAME: "mistral.mistral-large-2402-v1:0"
+
+# Sampler/Sets configuration
+SET_TYPES:  # The types of sets to use in the experiment
+  - "numbers"
+  - "words"
+
+N:  # The maximum N that we sample numbers/words from
+  - 1000
+M:  # The number of members in the sets
+  - 2
+  - 4
+  - 8
+  - 16
+
+ITEM_LEN:  # The length of the items in the sets (e.g., 3 -> 526 or 4 -> book)
+  # - None
+  - 1
+  - 2
+  - 3
+  - 4
+
+OVERLAP_FRACTION:
+  - None
+
+DECILE_NUM:
+  - None
+
+# Prompt configuration
+K_SHOT:  # The number of examples to use in the prompt
+  - 0
+  # - 1
+  # - 3
+  # - 5
+PROMPT_TYPE:  # The type of prompt language to use
+  - "formal_language"
+  # - "plain_language"
+PROMPT_APPROACH:  # The approach to use for the prompt (e.g., baseline, CoT)
+  # - "baseline"
+  - "baseline_allow_empty"
+  # - "composite"
+  - "composite_allow_empty"
+  # - "domain_expertise"
+  # - "self_recitation"
+  # - "chain_of_thought"
+IS_FIX_SHOT:  # Whether to use a fixed pre-defined sets across all experiments
+  - True

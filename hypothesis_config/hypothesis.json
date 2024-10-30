@@ -1,0 +1,94 @@
+{
+    "Prompt Language Comparison": {
+        "Token frequency": [-1],
+        "Token similarity": [0],
+        "Token type": ["Words", "Numbers"],
+        "hypo_name": "which_prompt_language_is_better_formal_vs_plain"
+    },
+    "Operation Type Comparison": {
+        "Token frequency": [-1],
+        "Token similarity": [0],
+        "Token type": ["Words", "Numbers"],
+        "hypo_name": "operation_types"
+    },
+    "Numbers vs Words": {
+        "Token frequency": [-1],
+        "Token similarity": [0],
+        "Token type": ["Words", "Numbers"],
+        "hypo_name": "numbers_vs_words"
+    },
+    "Operand Size": {
+        "Token frequency": [-1],
+        "Token similarity": [0],
+        "Demonstration phrasing": ["Formal Language"],
+        "Token type": ["Words", "Numbers"],
+        "Number of demonstrations": [0],
+        "hypo_name": "operand_size"
+    },
+    "LLM Comparison": {
+        "Token frequency": [-1],
+        "Token similarity": [0],
+        "Demonstration phrasing": ["Formal Language"],
+        "Token type": ["Words", "Numbers"],
+        "Token length": [1,2,3,4],
+        "Number of demonstrations": [0],
+        "Prompting method": ["Base Prompt\n(allow empty set)", "CoT and Self-Reflection\n(allow empty set)"],
+        "hypo_name": "llm_comparison"
+    },
+    "Token Frequency": {
+        "Token frequency": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "Token similarity": [0],
+        "Demonstration phrasing": ["Formal Language"],
+        "hypo_name": "compare_deciles"
+    },
+    "Deceptiveness Swapping Effect": {
+        "Token frequency": [-1],
+        "Token similarity": [1],
+        "LLM": ["Claude Haiku"],
+        "Demonstration phrasing": ["Formal Language"],
+        "Relationship between sets A and B": [0, 1],
+        "hypo_name": "deceptiveness_swapping_effect"
+    },
+    "Deceptiveness Effect": {
+        "Token frequency": [-1],
+        "LLM": ["Claude Haiku"],
+        "Demonstration phrasing": ["Formal Language"],
+        "Relationship between sets A and B": [-1, 1],
+        "hypo_name": "deceptiveness_effect"
+    },
+    "Deceptiveness Effect K Shots": {
+        "Token frequency": [-1],
+        "LLM": ["Claude Haiku"],
+        "Demonstration phrasing": ["Formal Language"],
+        "Relationship between sets A and B": [0, 1],
+        "hypo_name": "deceptiveness_effect_k_shots"
+    },
+    "Deceptiveness Effect For Word and Overlap Samplers": {
+        "LLM": ["Claude Haiku"],
+        "Prompting method": ["Base Prompt\n(allow empty set)", "CoT and Self-Reflection\n(allow empty set)"],
+        "Demonstration phrasing": ["Formal Language"],
+        "Study Name": ["240531_ClaudeHaiku", "240508_ClaudeHaiku_Deceptive", "240508_ClaudeHaiku_Deceptive_NoSwap"],
+        "hypo_name": "effect_of_deceptive_words_when_sampled_for_word_and_overlap_samplers"
+    },
+    "Deceptiveness Effect For Word and Overlap Samplers For Each Set Operation": {
+        "LLM": ["Claude Haiku"],
+        "Prompting method": ["Base Prompt\n(allow empty set)", "CoT and Self-Reflection\n(allow empty set)"],
+        "Demonstration phrasing": ["Formal Language"],
+        "Study Name": ["240531_ClaudeHaiku", "240508_ClaudeHaiku_Deceptive", "240508_ClaudeHaiku_Deceptive_NoSwap"],
+        "hypo_name": "effect_of_deceptive_words_when_sampled_for_word_and_overlap_samplers_for_each_set_operation"
+    },
+    "Is Overlap Important in Numbers?": {
+        "Token similarity": [0],
+        "LLM": ["Claude Haiku"],
+        "Token type": ["Numbers", "Overlapping Sets - Numbers"],
+        "Demonstration phrasing": ["Formal Language"],
+        "hypo_name": "is_overlap_important_only_haiku_numbers"
+    },
+    "Is Overlap Important in Words?": {
+        "Token similarity": [0],
+        "LLM": ["Claude Haiku"],
+        "Token type": ["Words", "Overlapping Sets - Words"],
+        "Demonstration phrasing": ["Formal Language"],
+        "hypo_name": "is_overlap_important_only_haiku_words"
+    }
+}

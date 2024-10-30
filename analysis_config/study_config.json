@@ -1,0 +1,9 @@
+{
+    "study_name":  "240505_ClaudeHaiku",
+    "object": "words",
+    "operation": "union",
+    "item_len": 2,
+    "n_items": 2,
+    "k_shots": 0,
+    "prompt_approach": "baseline"
+}

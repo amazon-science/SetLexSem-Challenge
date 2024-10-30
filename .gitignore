@@ -1,0 +1,13 @@
+*.egg-info
+data
+__pycache__
+venv
+playground
+results
+*.txt
+docs/*.pdf
+manuscript
+processed_results
+analysis/
+
+notebooks/dev
