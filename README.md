@@ -1,5 +1,5 @@
 # Overview
-This research repository maintains the codes and the results for the research paper: SETLEXSEM CHALLENGE: Using Set Operations to Evaluate the Lexical and Semantic Robustness of Language Models
+This research repository maintains the codes and the results for the research paper: SETLEXSEM CHALLENGE: Using Set Operations to Evaluate the Lexical and Semantic Robustness of Language Models. 
 
 "Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set." - https://plato.stanford.edu/entries/set-theory/
 
@@ -45,7 +45,7 @@ the installation instructions for this package.
 * Check the configs/anthr_sonnet.yaml
 * Running the experiment
 ```
-python mathbedrock/experiment/run_experiments.py --account_number <account-number> --save_file 1 --load_last_run 1 --config_file configs/anthr_sonnet.yaml
+python setlexsem/experiment/run_experiments.py --account_number <account-number> --save_file 1 --load_last_run 1 --config_file configs/anthr_sonnet.yaml
 ```
 * Post-Processing results (Check whether your study_name is present in the STUDY2MODEL dict in setlexsem/constants.py)
 ```
@@ -70,12 +70,6 @@ You will be prompted to provide your Account Number after that.
 pip install pytest-cov
 pytest --cov=setlexsem --cov-report=term-missing
 ```
-
-# TO-DO
-* Add instructions for how to create deciles.json (see the code in scripts/).
-  * Requires `wget`
-    * Mac OS: `brew install wget`
-  * Clean up code in scripts/. Nick ran this code once after submitsion to AMLC and to NeurIPS and found that most or all of the storage.googleapis.com URLs now return HTTP 404. Even the links on https://storage.googleapis.com/books/ngrams/books/datasetsv3.html did not work. Should we document an altogether different way to obtain the ngram frequencies?
 
 ## Security
 
