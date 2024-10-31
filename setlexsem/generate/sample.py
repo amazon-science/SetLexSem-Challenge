@@ -93,6 +93,15 @@ class Sampler:
         """Create a copy of the class"""
         return self
 
+    # return as dict
+    def to_dict(self):
+        return {
+            "class": self.__class__.__name__,
+            "n": self.n,
+            "m": self.m,
+            "item_len": self.item_len,
+        }
+
 
 def make_sampler_name_from_hps(sampler_hps):
     # idx 0: SET_TYPES

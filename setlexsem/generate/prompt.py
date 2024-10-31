@@ -70,6 +70,18 @@ class PromptConfig:
         new_sampler = self.sampler
         return self._define_kshots(new_sampler)
 
+    # return as dictionary
+    def to_dict(self):
+        return {
+            "k_shot": self.k_shot,
+            "type": self.type,
+            "approach": self.approach,
+            "operation": self.operation,
+            "item_type": self.item_type,
+            "is_fixed_shots": self.is_fixed_shots,
+            **self.sampler.to_dict(),
+        }
+
 
 # operations available
 OPS = {

@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import random
 from itertools import product
@@ -15,7 +14,6 @@ from setlexsem.generate.sample import (
 )
 from setlexsem.generate.utils_data_generation import (
     generate_data,
-    load_generated_data,
     save_generated_data,
 )
 

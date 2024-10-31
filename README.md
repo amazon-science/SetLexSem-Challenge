@@ -1,6 +1,6 @@
 # Overview
 
-This research repository maintains the codes and the results for the research paper: SETLEXSEM CHALLENGE: Using Set Operations to Evaluate the Lexical and Semantic Robustness of Language Models.
+This research repository maintains the code and the results for the research paper: SETLEXSEM CHALLENGE: Using Set Operations to Evaluate the Lexical and Semantic Robustness of Language Models.
 
 _"Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set."_ -[Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/set-theory/)
 
@@ -69,6 +69,16 @@ Then, you can run the following to generate data:
 
 ```bash
 python setlexsem/generate/generate_data.py --config_path "configs/data_generation/deciles.yaml" --seed_value 292 --save_data 1
+```
+
+## Prompt Generation
+
+### Numbers
+
+To generate your own data, you can run the following:
+
+```bash
+python setlexsem/generate/generate_prompts.py --config_path "configs/prompt_generation/numbers.yaml" --seed_value 292 --save_data 1
 ```
 
 ## Running Experiments End-to-End
