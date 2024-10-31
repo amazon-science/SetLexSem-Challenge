@@ -8,7 +8,7 @@ set -e
 
 if [ ! -e raw-data-google-ngram ]
 then
-    git clone git@github.com:stressosaurus/raw-data-google-ngram.git
+    git clone https://github.com/stressosaurus/raw-data-google-ngram.git
 fi
 
 # Unigrams, as we only care about single words.
