@@ -18,8 +18,10 @@ PATH_DATA_ROOT = os.path.join(PATH_ROOT, "data")
 PATH_PROMPTS_ROOT = os.path.join(PATH_ROOT, "prompts")
 PATH_RESULTS_ROOT = os.path.join(PATH_ROOT, "results")
 PATH_CONFIG_ROOT = os.path.join(PATH_ROOT, "configs")
-PATH_ANALYSIS_CONFIG_ROOT = os.path.join(PATH_ROOT, "analysis_config")
-PATH_HYPOTHESIS_CONFIG_ROOT = os.path.join(PATH_ROOT, "hypothesis_config")
+PATH_ANALYSIS_CONFIG_ROOT = os.path.join(PATH_CONFIG_ROOT, "post_analysis")
+PATH_HYPOTHESIS_CONFIG_ROOT = os.path.join(
+    PATH_CONFIG_ROOT, "post_hypothesis"
+)
 PATH_POSTPROCESS = os.path.join(PATH_ROOT, "processed_results")
 PATH_ANALYSIS = os.path.join(PATH_ROOT, "analysis")
 

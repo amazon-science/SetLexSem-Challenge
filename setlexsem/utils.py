@@ -34,6 +34,15 @@ LOGGER.setLevel(level=logging.INFO)
 def get_study_paths(
     sampler_hp, prompt_hp, random_seed, study_name, path_root
 ):
+    """Generate study paths based on given parameters.
+
+    Args:
+        sampler_hp (tuple): Hyperparameters for the sampler.
+        prompt_hp (tuple): Hyperparameters for the prompt.
+        random_seed (int): Random seed for reproducibility.
+        study_name (str): Name of the study.
+        path_root (str): Root path for storing study results.
+    """
     assert type(sampler_hp) is tuple, "sampler_hp has to be a tuple"
     assert type(prompt_hp) is tuple, "prompt_hp has to be a tuple"
 
@@ -54,6 +63,14 @@ def get_study_paths(
 
 
 def get_prompt_file_path(sampler_hp, prompt_hp, random_seed):
+    """
+    Generate the experiment folder structure and filename based on given parameters.
+
+    Args:
+        sampler_hp (tuple): Hyperparameters for the sampler.
+        prompt_hp (tuple): Hyperparameters for the prompt.
+        random_seed (int): Random seed for reproducibility (dataset is generated with this seed)
+    """
     sampler_name = make_sampler_name_from_hps(sampler_hp)
     filename_experiment = create_filename(
         prompt_hp[2], sampler_name, prompt_hp[1], random_seed
