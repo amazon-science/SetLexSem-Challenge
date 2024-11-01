@@ -1,6 +1,6 @@
 """
 Helper functions for partitioning words according to their frequencies. See
-uses of these functions in `scripts/partition_words.py`.
+uses of these functions in `scripts/make_percentiles.py`.
 """
 
 import math
@@ -43,7 +43,7 @@ def normalize_counts(words_to_counts):
         words_to_counts[word] /= max_count
 
 
-def partition_words(words_to_counts, k, remove_outliers=False):
+def make_percentiles(words_to_counts, k, remove_outliers=False):
     partition = defaultdict(list)
 
     if remove_outliers:
