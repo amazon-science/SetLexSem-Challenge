@@ -78,7 +78,7 @@ python setlexsem/generate/generate_data.py --config_path "configs/data_generatio
 To generate your own data, you can run the following:
 
 ```bash
-python setlexsem/generate/generate_prompts.py --config_path "configs/prompt_generation/numbers.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_prompts.py --config_path "configs/prompt_generation/test_config.yaml" --seed_value 292 --save_data 1
 ```
 
 ## Running Experiments End-to-End
