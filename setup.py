@@ -40,6 +40,7 @@ setup(
         "tiktoken",
         "openai",
         "pandas",
+        "pyyaml",
     ],
     extras_require={
         "dev": ["check-manifest", "flake8", "black"],

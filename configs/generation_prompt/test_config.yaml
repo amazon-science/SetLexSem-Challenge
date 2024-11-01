@@ -1,0 +1,55 @@
+# The number of prompt-examples you want to be created
+N_RUN: 100
+
+# The random seed value to use
+RANDOM_SEED_VAL: 292
+
+# The list of operations to perform
+OP_LIST:
+  - "union"
+  - "intersection"
+
+# Sampler/Sets configuration
+# The types of sets to use in the experiment
+SET_TYPES:
+  - "numbers"
+
+# The maximum N that we sample numbers/words from
+N:
+  - 10000
+
+# The number of members in the sets
+M:
+  - 2
+  - 4
+
+# The length of the items in the sets (e.g., 3 -> 526 or 4 -> book)
+ITEM_LEN:
+  - None
+  - 1
+
+OVERLAP_FRACTION:
+  - None
+
+DECILE_NUM:
+  - None
+
+# Prompt configuration
+ # The number of examples to use in the prompt
+K_SHOT:
+  - 0
+  - 1
+  - 3
+
+# The type of prompt language to use
+PROMPT_TYPE:
+  - "formal_language"
+
+# The approach to use for the prompt (e.g., baseline, CoT)
+PROMPT_APPROACH:
+  - "baseline"
+  - "chain_of_thought"
+
+# Whether to use a fixed pre-defined sets across all experiments
+IS_FIX_SHOT:
+  - True

@@ -34,23 +34,51 @@ LOGGER.setLevel(level=logging.INFO)
 def get_study_paths(
     sampler_hp, prompt_hp, random_seed, study_name, path_root
 ):
+    """Generate study paths based on given parameters.
+
+    Args:
+        sampler_hp (tuple): Hyperparameters for the sampler.
+        prompt_hp (tuple): Hyperparameters for the prompt.
+        random_seed (int): Random seed for reproducibility.
+        study_name (str): Name of the study.
+        path_root (str): Root path for storing study results.
+    """
     assert type(sampler_hp) is tuple, "sampler_hp has to be a tuple"
     assert type(prompt_hp) is tuple, "prompt_hp has to be a tuple"
 
-    sampler_name = make_sampler_name_from_hps(sampler_hp)
-    filename_experiment = create_filename(
-        prompt_hp[2], sampler_name, prompt_hp[1], random_seed
+    # get experiment_folder_structure
+    experiment_folder_structure, filename_experiment = get_prompt_file_path(
+        sampler_hp, prompt_hp, random_seed
     )
 
     # save df_results
     path_study_folder = os.path.join(
-        path_root, study_name, sampler_hp[0], prompt_hp[0], prompt_hp[3]
+        path_root, study_name, experiment_folder_structure
     )
 
     # create path
     path_results = os.path.join(path_study_folder, filename_experiment)
 
     return path_study_folder, path_results
+
+
+def get_prompt_file_path(sampler_hp, prompt_hp, random_seed):
+    """
+    Generate the experiment folder structure and filename based on given parameters.
+
+    Args:
+        sampler_hp (tuple): Hyperparameters for the sampler.
+        prompt_hp (tuple): Hyperparameters for the prompt.
+        random_seed (int): Random seed for reproducibility (dataset is generated with this seed)
+    """
+    sampler_name = make_sampler_name_from_hps(sampler_hp)
+    filename_experiment = create_filename(
+        prompt_hp[2], sampler_name, prompt_hp[1], random_seed
+    )
+    experiment_folder_structure = os.path.join(
+        sampler_hp[0], prompt_hp[0], prompt_hp[3]
+    )
+    return experiment_folder_structure, filename_experiment
 
 
 def get_data_filename(sampler_name, random_seed_value, num_runs):
@@ -214,12 +242,20 @@ def read_config(
         config = yaml.safe_load(f)
 
     # Validate and assign the configuration values
-    STUDY_NAME: str = config["STUDY_NAME"]
+    STUDY_NAME: str = (
+        config["STUDY_NAME"] if "STUDY_NAME" in config else "None"
+    )
     N_RUN: int = config["N_RUN"]
-    LOAD_GENERATED_DATA: bool = config["LOAD_GENERATED_DATA"]
+    LOAD_GENERATED_DATA: bool = (
+        config["LOAD_GENERATED_DATA"]
+        if "LOAD_GENERATED_DATA" in config
+        else False
+    )
     RANDOM_SEED_VAL: int = config["RANDOM_SEED_VAL"]
     OP_LIST: List[str] = config["OP_LIST"]
-    MODEL_NAME: str = config["MODEL_NAME"]
+    MODEL_NAME: str = (
+        config["MODEL_NAME"] if "MODEL_NAME" in config else "None"
+    )
 
     SET_TYPES: List[str] = config["SET_TYPES"]
     N: List[int] = config["N"]

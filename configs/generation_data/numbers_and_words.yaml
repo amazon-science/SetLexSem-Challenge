@@ -1,0 +1,18 @@
+set_types:
+  - numbers
+  - words
+n:
+  - 10000
+m:
+  - 2
+  - 4
+  - 8
+  - 16
+item_len:
+  - 1
+  - 2
+  - 3
+  - 4
+  - null
+overlap_fraction:
+  - null

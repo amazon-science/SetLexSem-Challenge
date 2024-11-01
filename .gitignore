@@ -11,3 +11,5 @@ processed_results
 analysis/
 
 notebooks/dev
+raw-data-google-ngram
+prompts
