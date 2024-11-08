@@ -58,7 +58,27 @@ warnings.filterwarnings(
 
 
 class Sampler:
+    """
+    Base class for samplers.
+
+    Parameters
+    ----------
+    n : int
+        Total number of items to sample from.
+    m : int
+        Number of items to include in each sampled set.
+    item_len : int, optional
+        Length constraint for sampled items.
+    random_state : Random, optional
+        Random number generator.
+
+    Raises
+    ------
+    ValueError
+        If m is greater than n.
+    """
     def __init__(self, n: int, m: int, item_len=None, random_state=None):
+
         if m > n:
             raise ValueError(
                 f"m ({m}) should be greater than n ({n}) but {m} <= {n}"
@@ -72,16 +92,39 @@ class Sampler:
             self.random_state = random_state
 
     def __call__(self):
+        """
+        Sample two sets of items.
+
+        Raises
+        ------
+        NotImplementedError
+            This method should be implemented by subclasses.
+        """
         raise NotImplementedError()
 
     def __str__(self):
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string.
+        """
         return (
             f"{self.__class__.__name__} "
             f"({self.n=}, {self.m=}, {self.item_len=})"
         )
 
     def make_filename(self):
-        """Create a string for the parameters of the generated data"""
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string.
+        """
         if self.item_len:
             n = None
         else:
@@ -90,11 +133,25 @@ class Sampler:
         return f"N-{n}_M-{self.m}_L-{self.item_len}"
 
     def create_sampler_for_k_shot(self):
-        """Create a copy of the class"""
+        """
+        Return the instance itself.
+
+        Returns
+        -------
+        Sampler
+            A reference to the instance itself.
+        """
         return self
 
-    # return as dict
     def to_dict(self):
+        """
+        Convert sampler parameters to a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing sampler parameters.
+        """
         return {
             "class": self.__class__.__name__,
             "n": self.n,
@@ -104,6 +161,19 @@ class Sampler:
 
 
 def make_sampler_name_from_hps(sampler_hps):
+    """
+    Create a formatted string name for a sampler based on its hyperparameters.
+
+    Parameters
+    ----------
+    sampler_hps : list
+        List of sampler hyperparameters.
+
+    Returns
+    -------
+    str
+        Formatted string name for the sampler.
+    """
     # idx 0: SET_TYPES
     # idx 1: N
     # idx 2: M
@@ -164,7 +234,26 @@ def make_sampler_name_from_hps(sampler_hps):
 
 
 def filter_words(words, item_len):
-    """returns a list of words that have length N"""
+    """
+    Filter a list of words to only include those of a specific length.
+
+    Parameters
+    ----------
+    words : list
+        List of words to filter.
+    item_len : int
+        Desired length of words to keep.
+
+    Returns
+    -------
+    list
+        Filtered list of words with the specified length.
+
+    Raises
+    ------
+    AssertionError
+        If item_len is less than 1 or greater than the longest word.
+    """
     assert item_len >= 1, "N should be greater than 0"
     assert item_len <= len(max(words, key=len)), (
         f"item_len (={item_len}) should be less than "
@@ -182,12 +271,21 @@ def filter_words(words, item_len):
 
 class BasicWordSampler(Sampler):
     """
-    Return two sets of m (m=number of items) words sampled from n words in the
-    English word list.
+    Sampler for basic English words.
 
-    If item_len is not None, the length of each word is limited to it.
+    Parameters
+    ----------
+    n : int
+        Total number of words to sample from.
+    m : int
+        Number of words to include in each sampled set.
+    words : list or set of str, optional
+        Custom word list to sample from.
+    item_len : int, optional
+        Length constraint for sampled words.
+    random_state : Random, optional
+        Random number generator.
     """
-
     def __init__(
         self,
         n: int,
@@ -217,20 +315,44 @@ class BasicWordSampler(Sampler):
             )
 
     def __call__(self):
+        """
+        Sample two sets of words.
+
+        Returns
+        -------
+        tuple of set
+            Two sets of sampled words.
+        """
         A = set(self.random_state.sample(self.possible_options, self.m))
         B = set(self.random_state.sample(self.possible_options, self.m))
         return A, B
 
     def get_members_type(self):
+        """
+        Get the type of members in the sampled sets.
+
+        Returns
+        -------
+        str
+            Type of members ("words").
+        """
         return "words"
 
 
 class BasicNumberSampler(Sampler):
     """
-    Return two sets of m numbers sampled from 0 to n-1.
+    Sampler for numbers.
 
-    If item_len is not None, the length of each number is limited, and n is
-    overridden.
+    Parameters
+    ----------
+    n : int
+        Upper bound of the range to sample from.
+    m : int
+        Number of numbers to include in each sampled set.
+    item_len : int, optional
+        Length constraint for sampled numbers.
+    random_state : Random, optional
+        Random number generator.
     """
 
     def __init__(
@@ -240,6 +362,9 @@ class BasicNumberSampler(Sampler):
         self.init_range_filter()
 
     def init_range_filter(self):
+        """
+        Initialize the range of possible numbers based on constraints.
+        """
         if self.item_len is None:
             self.possible_options = range(0, self.n)
         else:
@@ -249,17 +374,42 @@ class BasicNumberSampler(Sampler):
             self.possible_options = range(range_f, range_l)
 
     def __call__(self):
+        """
+        Sample two sets of numbers.
+
+        Returns
+        -------
+        tuple of set
+            Two sets of sampled numbers.
+        """
         A = set(self.random_state.sample(self.possible_options, self.m))
         B = set(self.random_state.sample(self.possible_options, self.m))
         return A, B
 
     def get_members_type(self):
+        """
+        Get the type of members in the sampled sets.
+
+        Returns
+        -------
+        str
+            Type of members ("numbers").
+        """
         return "numbers"
 
 
 class OverlapSampler(Sampler):
     """
-    Return two sets of m numbers that are overlapped by overlap_percentage
+    Sampler that creates overlapping sets.
+
+    Parameters
+    ----------
+    sampler : Sampler
+        Base sampler to use for initial sampling.
+    overlap_fraction : float, optional
+        Fraction of overlap between sets.
+    overlap_n : int, optional
+        Number of overlapping items.
     """
 
     def __init__(
@@ -295,6 +445,19 @@ class OverlapSampler(Sampler):
         self.nonoverlap_n = m - self.overlap_n
 
     def __call__(self):
+        """
+        Sample two sets with specified overlap.
+
+        Returns
+        -------
+        tuple of set
+            Two sets with specified overlap.
+
+        Raises
+        ------
+        StopIteration
+            If unable to create sets with specified overlap after 100 attempts.
+        """
         A, B = self.sampler()
 
         counter = 0
@@ -322,10 +485,25 @@ class OverlapSampler(Sampler):
         return A, B
 
     def get_members_type(self):
+        """
+        Get the type of members in the sampled sets.
+
+        Returns
+        -------
+        str
+            Type of members (includes "overlapping" prefix).
+        """
         return f"overlapping_{self.sampler.__class__.__name__}"
 
     def make_filename(self):
-        """Create a string for the parameters of the generated data"""
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string including overlap information.
+        """
         name_pre = self.sampler.make_filename()
         return f"{name_pre}_O-{self.overlap_n}"
 
@@ -336,7 +514,22 @@ def get_clean_hyponyms(
     filename=os.path.join(PATH_DATA_ROOT, "hyponyms.json"),
 ):
     """
-    Return a list of lists of hyponyms and save them
+    Get a list of clean hyponyms and optionally save them to a JSON file.
+
+    Parameters
+    ----------
+    random_state : RandomState
+        Random state for shuffling.
+    save_json : int, optional
+        Whether to save the result to JSON. Default is 0.
+    filename : str, optional
+        Path to save the JSON file. Default is "hyponyms.json" in
+        PATH_DATA_ROOT.
+
+    Returns
+    -------
+    list
+        List of clean hyponym sets.
     """
     hyperhypo = list(find_hypernyms_and_hyponyms())
     clean_hyponyms = postprocess_hyponym_sets(hyperhypo, random_state)
@@ -350,10 +543,24 @@ def get_clean_hyponyms(
 
 def postprocess_hyponym_sets(hyperhypo, random_state):
     """
-    Convert sets of hyponyms to strings. The hyponyms are WordNet Synsets.
+    Process hyponym sets to clean and simplify the lexical forms.
+
+    Converts sets of hyponyms to strings. The hyponyms are WordNet Synsets.
     A synset can have multiple lexical forms (obtained via
     `Synset.lemma_names()`). Some lemma names are simple variations of each
     other. We aggressively filter them out.
+
+    Parameters
+    ----------
+    hyperhypo : list
+        List of hypernym-hyponym pairs.
+    random_state : RandomState
+        Random state for shuffling.
+
+    Returns
+    -------
+    list
+        Cleaned list of hyponym sets.
     """
     clean_hyponyms = []
     for hyper, hypolist in hyperhypo:
@@ -379,6 +586,8 @@ def postprocess_hyponym_sets(hyperhypo, random_state):
 
 class DeceptiveWordSampler(Sampler):
     """
+    Sampler for creating sets of words that may be confusing to language models.
+
     Return two sets of m (m=number of items) words sampled from the words in
     the WordNet dictionary. The sets are constructed in a way that may be
     confusing to a language model. Here's how:
@@ -396,7 +605,29 @@ class DeceptiveWordSampler(Sampler):
     We will determine experimentally whether this bifurcation confuses language
     models when they attempt to perform set operations.
 
-    If item_len is not None, the length of each word is limited to it.
+    Parameters
+    ----------
+    n : int
+        Total number of words to sample from (not used directly).
+    m : int
+        Number of words to include in each sampled set.
+    item_len : int, optional
+        Length constraint for sampled words (not supported).
+    random_state : Random, optional
+        Random number generator.
+    with_replacement : bool, optional
+        Whether to sample with replacement.
+    swap_set_elements : bool, optional
+        Whether to swap elements between sets.
+    swap_n : int, optional
+        Number of elements to swap between sets.
+    random_state_mix_sets : Random, optional
+        Random number generator for mixing sets.
+
+    Raises
+    ------
+    ValueError
+        If m is greater than 30.
     """
 
     def __init__(
@@ -435,6 +666,14 @@ class DeceptiveWordSampler(Sampler):
         self.possible_options = list(filter(f, self.clean_hyponyms))
 
     def __call__(self):
+        """
+        Sample two sets of words with potential mixing.
+
+        Returns
+        -------
+        tuple of set
+            Two sets of sampled words.
+        """
         if not self.with_replacement:
             # When we're not using replacement, the selected set of words is
             # removed from the set of options. So when we're not using
@@ -450,6 +689,19 @@ class DeceptiveWordSampler(Sampler):
         return A, B
 
     def load_hyponym_sets(self, filename):
+        """
+        Load hyponym sets from a JSON file.
+
+        Parameters
+        ----------
+        filename : str
+            Path to the JSON file containing hyponym sets.
+
+        Returns
+        -------
+        list
+            List of hyponym sets.
+        """
         with open(filename) as f:
             hyponyms = json.load(f)
         return hyponyms
@@ -458,8 +710,21 @@ class DeceptiveWordSampler(Sampler):
         self, hyponyms, with_replacement=False, normalize=True
     ):
         """
-        Choose a particular set of hyponyms and return a random subset of m of
-        its elements.
+        Choose a set of hyponyms and return a random subset.
+
+        Parameters
+        ----------
+        hyponyms : list
+            List of hyponym sets to choose from.
+        with_replacement : bool, optional
+            Whether to sample with replacement.
+        normalize : bool, optional
+            Whether to normalize the chosen hyponyms.
+
+        Returns
+        -------
+        set
+            Set of chosen hyponyms.
         """
         hyponym_list = list(self.random_state.choice(hyponyms))
         if not with_replacement:
@@ -471,9 +736,30 @@ class DeceptiveWordSampler(Sampler):
 
     def mix_sets(self, A, B, subset_size=None):
         """
+        Mix elements between two sets.
+
         Choose a particular subset size for mixing and swap a subset of that
         size between A and B. A and B are already shuffled, so we just take the
         first elements.
+
+        Parameters
+        ----------
+        A : set
+            First set of words.
+        B : set
+            Second set of words.
+        subset_size : int, optional
+            Size of the subset to mix between sets.
+
+        Returns
+        -------
+        tuple of set
+            Two sets after mixing elements.
+
+        Raises
+        ------
+        ValueError
+            If subset_size is larger than either set.
         """
         if not subset_size:
             subset_size = self.random_state_mix_sets.randint(1, self.m)
@@ -490,15 +776,33 @@ class DeceptiveWordSampler(Sampler):
         return set(A), set(B)
 
     def get_members_type(self):
+        """
+        Get the type of members in the sampled sets.
+
+        Returns
+        -------
+        str
+            Type of members ("deceptive_words").
+        """
         return f"deceptive_words_{self.swap_set_elements}"
 
 
 class DecileWordSampler(BasicWordSampler):
     """
-    Return two sets of m (m=number of items) words sampled from n words in the
-    English word list.
+    Sampler for words from a specific frequency decile.
 
-    If item_len is not None, the length of each word is limited to it.
+    Parameters
+    ----------
+    n : int
+        Total number of words to sample from.
+    m : int
+        Number of words to include in each sampled set.
+    decile_num : int
+        Decile number to sample from (1-10).
+    item_len : int, optional
+        Length constraint for sampled words.
+    random_state : Random, optional
+        Random number generator.
     """
 
     def __init__(
@@ -521,14 +825,38 @@ class DecileWordSampler(BasicWordSampler):
         )
 
     def load_deciles(self):
+        """
+        Load word frequency deciles from a JSON file.
+
+        Returns
+        -------
+        dict
+            Dictionary of word frequency deciles.
+        """
         with open(f"{PATH_DATA_ROOT}/deciles.json", "rt") as fh:
             deciles = json.load(fh)
         return deciles
 
     def get_members_type(self):
+        """
+        Get the type of members in the sampled sets.
+
+        Returns
+        -------
+        str
+            Type of members ("decile_words").
+        """
         return "decile_words"
 
     def make_filename(self):
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string including decile information.
+        """
         """Create a string for the parameters of the generated data"""
         if self.item_len:
             n = None
@@ -546,12 +874,36 @@ class DecileWordSampler(BasicWordSampler):
 
 
 def normalize_lemma_name(lemma_name):
-    """Replace underscores in lemma names with space."""
+    """
+    Replace underscores in lemma names with spaces.
+
+    Parameters
+    ----------
+    lemma_name : str
+        The lemma name to normalize.
+
+    Returns
+    -------
+    str
+        Normalized lemma name.
+    """
     return lemma_name.replace("_", " ")
 
 
 def is_lemma_simple(lemma):
-    """A lemma is simple when it's a single token."""
+    """
+    Check if a lemma is simple (single token without complex characters).
+
+    Parameters
+    ----------
+    lemma : str
+        The lemma to check.
+
+    Returns
+    -------
+    bool
+        True if the lemma is simple, False otherwise.
+    """
     for complex_character in "_-":
         if complex_character in lemma:
             return False
@@ -559,7 +911,19 @@ def is_lemma_simple(lemma):
 
 
 def contains_uppercase(synset):
-    """Returns true if any lemma in the synset is uppercase (proper name?)."""
+    """
+    Check if any lemma in the synset contains uppercase characters.
+
+    Parameters
+    ----------
+    synset : Synset
+        The synset to check.
+
+    Returns
+    -------
+    bool
+        True if any lemma contains uppercase, False otherwise.
+    """
     for lemma_name in synset.lemma_names():
         if lemma_name.lower() != lemma_name:
             return True
@@ -568,7 +932,19 @@ def contains_uppercase(synset):
 
 def contains_character(synset, characters="-"):
     """
-    Returns true if any lemma in the synset contains any of the characters.
+    Check if any lemma in the synset contains specified characters.
+
+    Parameters
+    ----------
+    synset : Synset
+        The synset to check.
+    characters : str, optional
+        Characters to look for. Default is "-".
+
+    Returns
+    -------
+    bool
+        True if any lemma contains specified characters, False otherwise.
     """
     for lemma_name in synset.lemma_names():
         for character in characters:
@@ -580,6 +956,16 @@ def contains_character(synset, characters="-"):
 def remove_substring_lemmata(lemma_names):
     """
     Remove any lemma that is a substring of another lemma.
+
+    Parameters
+    ----------
+    lemma_names : list
+        List of lemma names.
+
+    Returns
+    -------
+    list
+        Filtered list of lemma names without substrings.
     """
     substring_lemmata = set()
     # Ensure uniqueness and defensively copy.
@@ -598,9 +984,21 @@ def remove_substring_lemmata(lemma_names):
 
 def make_edit_distance_queue(lemma_names):
     """
+    Create a queue of lemma pairs sorted by edit distance.
+
     Make a queue with edit distances as keys and lists of lemmata pairs as
     values. The elements are sorted, in ascending order, with the list of
     lemmata pairs with the least edit distance first.
+
+    Parameters
+    ----------
+    lemma_names : list
+        List of lemma names.
+
+    Returns
+    -------
+    list
+        Sorted queue of (edit_distance, lemma_pairs) tuples.
     """
     distances = defaultdict(list)
     for i, lemma_name1 in enumerate(lemma_names):
@@ -615,8 +1013,28 @@ def remove_similar_lemmata(
     lemma_names, random_state, min_distance=3, max_iteration=4
 ):
     """
-    Remove a lemma until the mininum pairwise edit distance is greater than
-    or equal to `min_distance`.
+    Remove similar lemmata until the minimum pairwise edit distance is met.
+
+    Parameters
+    ----------
+    lemma_names : list
+        List of lemma names.
+    random_state : RandomState
+        Random state for shuffling.
+    min_distance : int, optional
+        Minimum edit distance. Default is 3.
+    max_iteration : int, optional
+        Maximum number of iterations. Default is 4.
+
+    Returns
+    -------
+    list
+        Filtered list of lemma names.
+
+    Raises
+    ------
+    StopIteration
+        If max_iteration is exceeded.
     """
     lemma_names = list(lemma_names)
     lemma_names = remove_substring_lemmata(lemma_names)
@@ -644,7 +1062,15 @@ def get_hyponyms(synset):
     """
     Get all the hyponyms of this synset.
 
-    See https://stackoverflow.com/a/33662890 for origin of this code.
+    Parameters
+    ----------
+    synset : Synset
+        The synset to get hyponyms for.
+
+    Returns
+    -------
+    set
+        Set of all hyponyms.
     """
     hyponyms = set()
     for hyponym in synset.hyponyms():
@@ -656,7 +1082,10 @@ def find_hypernyms_and_hyponyms():
     """
     Find hypernym-hyponym pairs, along with their distance.
 
-    Return generator of (hypernym, hyponym, distance) tuples.
+    Yields
+    ------
+    tuple
+        (hypernym, hyponyms) pairs.
     """
     for synset in wn.all_synsets():
         # Find all the hyponyms of this synset.
@@ -675,17 +1104,50 @@ def find_hypernyms_and_hyponyms():
 
 
 def get_hyponym_set_lengths(hyperhypo):
-    """Get the lengths of the sets of hyponyms of each hypernym."""
+    """
+    Get the lengths of hyponym sets for each hypernym.
+
+    Parameters
+    ----------
+    hyperhypo : list
+        List of hypernym-hyponym pairs.
+
+    Returns
+    -------
+    list
+        List of hyponym set lengths.
+    """
     lengths = [len(hh) for hh in hyperhypo]
     return lengths
 
 
 def by_length(s, min_length=None, max_length=30):
     """
+    Check if the length of a set is within specified bounds.
+
     We want the user to be able to choose a size for their sets. We also want
     to be careful that they're not too big. Sets of hyponyms with many elements
     are super generic (e.g. the hyponyms of the hypernym "entity") and aren't
     useful for our task.
+
+    Parameters
+    ----------
+    s : set or list
+        The set to check.
+    min_length : int, optional
+        Minimum length. Must be positive.
+    max_length : int, optional
+        Maximum length. Default is 30.
+
+    Returns
+    -------
+    bool
+        True if length is within bounds, False otherwise.
+
+    Raises
+    ------
+    ValueError
+        If min_length is not positive.
 
     >>> from functools import partial
     >>> f = partial(by_length, min_length=5)
