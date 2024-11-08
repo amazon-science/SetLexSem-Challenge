@@ -52,7 +52,7 @@ the installation instructions for this package.
 To generate your own data, you can run the following:
 
 ```bash
-python setlexsem/generate/generate_data.py --config_path "configs/data_generation/numbers_and_words.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_data.py --config_path "configs/generation_data/numbers_and_words.yaml" --seed_value 292 --save_data 1
 ```
 
 ### Generate Sets based on their training-set frequency
@@ -75,7 +75,7 @@ This will take ~10 minutes or more, depending on your bandwidth and the speed of
 Then run the following to generate data.
 
 ```bash
-python setlexsem/generate/generate_data.py --config_path "configs/data_generation/deciles.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deciles.yaml" --seed_value 292 --save_data 1
 ```
 
 ## Generating Prompts
@@ -85,7 +85,7 @@ python setlexsem/generate/generate_data.py --config_path "configs/data_generatio
 To generate your own data, you can run the following:
 
 ```bash
-python setlexsem/generate/generate_prompts.py --config_path "configs/prompt_generation/test_config.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_prompts.py --config_path "configs/generation_prompt/test_config.yaml" --seed_value 292 --save_data 1
 ```
 
 ## Running Experiments End-to-End
