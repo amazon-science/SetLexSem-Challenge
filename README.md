@@ -29,7 +29,7 @@ nltk.download("words")
 Note that `words` should be automatically installed by `pip` when you follow
 the installation instructions for this package.
 
-## Directory Structure
+## Directory structure
 
 * `configs/`
   * `configs/experimetns` contains configuration files which specify hyperparamter settings for running experiments.
@@ -45,19 +45,19 @@ the installation instructions for this package.
   * `generate` contains code for generating data, sample synthetic sets, prompts and utils needed for data generation.
   * `prepare` contains helper functions for partitioning words according to their frequencies.
 
-## Generating Datasets
+## Generating datasets
 
-### Generate Sets with Numbers or Words
+### Sample sets with numbers or words
 
-To generate your own data, you can run the following:
+To sample your own data, you can run the following:
 
 ```bash
 python setlexsem/generate/generate_data.py --config_path "configs/generation_data/numbers_and_words.yaml" --seed_value 292 --save_data 1
 ```
 
-### Generate Sets based on their training-set frequency
+### Sample sets based on (approximated) training-set frequency
 
-To generate sets based on their training-set frequency, we use an approximation based on rank frequency in the Google Books Ngrams corpus.
+To sample sets based on their training-set frequency, we use an approximation based on rank frequency in the Google Books Ngrams corpus.
 
 This requires `wget` (`brew install wget` or `apt install wget`). After
 installing `wget`, you need to create `deciles.json`. The following command
@@ -78,9 +78,18 @@ Then run the following to generate data.
 python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deciles.yaml" --seed_value 292 --save_data 1
 ```
 
-## Generating Prompts
+### Sample "deceptive" sets
 
-### Example: Sets with Numbers
+To sample "deceptive" sets (see paper for details), create `hyponyms.json` by
+running the following command:
+
+```bash
+python scripts/make_hyponyms.py --output-path data/hyponyms.json
+```
+
+## Generating prompts
+
+### Example: Sets with numbers
 
 To generate your own data, you can run the following:
 
@@ -88,7 +97,7 @@ To generate your own data, you can run the following:
 python setlexsem/generate/generate_prompts.py --config_path "configs/generation_prompt/test_config.yaml" --seed_value 292 --save_data 1
 ```
 
-## Running Experiments End-to-End
+## Running end-to-end evaluation
 
 1. Create a config file like `configs/experiments/anthr_sonnet.yaml`
 2. Run the experiment:
@@ -123,7 +132,7 @@ pytest -s .
 
 You will be prompted to provide your Account Number after that.
 
-### Coverage Report
+### Coverage report
 
 ```bash
 pip install pytest-cov
