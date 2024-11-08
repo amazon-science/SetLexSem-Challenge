@@ -31,6 +31,7 @@ class InstallNltkWordnetDuringDevelop(develop):
 
 setup(
     name="setlexsem",
+    version="0.0.0",
     packages=find_packages(),
     install_requires=[
         "tqdm",
