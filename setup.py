@@ -8,6 +8,7 @@ setup(
         "tqdm",
         "anthropic",
         "boto3",
+        "nltk",
         "tiktoken",
         "openai",
         "pandas",
@@ -16,6 +17,5 @@ setup(
     extras_require={
         "dev": ["check-manifest", "flake8", "black"],
         "test": ["pytest", "coverage"],
-        "nltk": ["nltk"],
     },
 )
