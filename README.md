@@ -55,20 +55,24 @@ To generate your own data, you can run the following:
 python setlexsem/generate/generate_data.py --config_path "configs/data_generation/numbers_and_words.yaml" --seed_value 292 --save_data 1
 ```
 
-### Generate Sets using N-grams (Deciles)
+### Generate Sets based on their training-set frequency
 
-To generate data based on `deciles`, you need to have `wget` installed (`brew install wget`). After installing `wget`, you need to create the `deciles.json` file. This process may take ~5-10 minutes.
+To generate sets based on their training-set frequency, we use an approximation based on rank frequency in the Google Books Ngrams corpus.
+
+This requires `wget` (`brew install wget` or `apt install wget`). After
+installing `wget`, you need to create `deciles.json`. The following command
+downloads the English unigram term frequencies of the Google Books Ngram
+corpus, filters them by the vocabulary of the nltk.words English vocabulary,
+and stores the vocabulary, separated by deciles of rank frequency, in
+`data/deciles.json`.
 
 ```bash
-scripts/raw-data-google-ngram-run.sh
-scripts/partition_words.py --args ...
-python scripts/partition_words.py \
-    --k 10 \
-    --google-ngram-path PATH/googlebooks-eng-all-1gram-20120701.filtered \
-    --output-path deciles.json
+scripts/make-deciles.sh
 ```
 
-Then, you can run the following to generate data:
+This will take ~10 minutes or more, depending on your bandwidth and the speed of your computer.
+
+Then run the following to generate data.
 
 ```bash
 python setlexsem/generate/generate_data.py --config_path "configs/data_generation/deciles.yaml" --seed_value 292 --save_data 1
