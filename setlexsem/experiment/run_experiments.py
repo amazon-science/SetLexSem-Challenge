@@ -30,29 +30,32 @@ def replace_none(list_in):
 def parse_args():
     parser = argparse.ArgumentParser()
     # add account number
-    parser.add_argument("--account_number", type=str, help="account number")
     parser.add_argument(
-        "--config_file",
+        "--account-number",
+        type=str,
+        required=True,
+        help="AWS account number"
+    )
+    parser.add_argument(
+        "--config-file",
         type=str,
         default=os.path.join(PATH_ROOT, "config.yaml"),
-        help="save files to disk",
+        help="Path to experiment config file"
     )
     parser.add_argument(
-        "--save_files",
-        type=int,
-        help="save files to disk",
+        "--save-files",
+        action="store_true",
+        help="Save files to disk",
     )
     parser.add_argument(
-        "--load_last_run",
-        type=int,
-        default=1,
-        help="load last run",
+        "--load-previous-run",
+        action="store_true",
+        help="Load the previous run",
     )
     parser.add_argument(
-        "--debug_model_no_lm_call",
-        type=int,
-        default=0,
-        help="debug model without calling language model",
+        "--debug-model-no-lm-call",
+        action="store_true",
+        help="Debug model without calling language model",
     )
     args = parser.parse_args()
     return args

@@ -54,7 +54,7 @@ the installation instructions for this package.
 To make the CSV file containing sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_data.py --config_path "configs/generation_data/numbers_and_words.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_data.py --config-path "configs/generation_data/numbers_and_words.yaml" --seed-value 292 --save-data 
 ```
 
 ### Sample sets based on training-set frequency
@@ -78,7 +78,7 @@ To make the CSV file containing sets of words sampled by the approximated
 training-set frequency, run:
 
 ```bash
-python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deciles.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_data.py --config-path "configs/generation_data/deciles.yaml" --seed-value 292 --save-data
 ```
 
 ### Sample "deceptive" sets
@@ -91,7 +91,7 @@ python scripts/make_hyponyms.py --output-path data/hyponyms.json
 
 To make the CSV file containing deceptive sets:
 ```bash
-python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deceptive.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_data.py --config-path "configs/generation_data/deceptive.yaml" --seed-value 292 --save-data 
 ```
 
 ## Create the prompts
@@ -103,7 +103,7 @@ Once you've sampled the sets, create the prompts. The prompts are written as CSV
 To make the CSV file containing prompts sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_prompts.py --config_path "configs/generation_prompt/test_config.yaml" --seed_value 292 --save_data 1
+python setlexsem/generate/generate_prompts.py --config-path "configs/generation_prompt/test_config.yaml" --seed-value 292 --save-data
 ```
 
 ## Run the evalution
@@ -112,7 +112,7 @@ python setlexsem/generate/generate_prompts.py --config_path "configs/generation_
 2. Run the prompts:
 
   ```bash
-  python setlexsem/experiment/run_experiments.py --account_number <account-number> --save_file 1 --load_last_run 1 --config_file configs/experiments/anthr_sonnet.yaml
+  python setlexsem/experiment/run_experiments.py --account-number ACCOUNT_NUMBER --save-file --load-previous-run --config-file configs/experiments/anthr_sonnet.yaml
   ```
 
   **Note:** Currently, our experiments are dependent on AWS Bedrock and need an AWS account number to be provided. However, you have the capability to run experiments using OPENAI_KEY. We will add more instructions soon.
