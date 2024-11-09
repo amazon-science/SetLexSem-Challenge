@@ -4,7 +4,7 @@ This research repository maintains the code and the results for the research pap
 
 _"Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set."_ -[Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/set-theory/)
 
-## Install
+# Install
 
 When installing, it's important to upgrade to the most recent pip. This ensures that `setup.py` runs correctly. An outdated version of pip can fail to run the `InstallNltkWordnetAfterPackages` command class in setup.py and cause subsequent errors.
 
@@ -16,7 +16,7 @@ pip install -e .
 pip install -e ."[dev, test]"
 ```
 
-### NLTK words
+# NLTK words
 
 If you get errors from `nltk` about package `words` not being installed while
 executing the code in this repository, run:
@@ -29,7 +29,7 @@ nltk.download("words")
 Note that `words` should be automatically installed by `pip` when you follow
 the installation instructions for this package.
 
-## Directory structure
+# Project layout
 
 * `configs/`
   * `configs/experimetns` contains configuration files which specify hyperparamter settings for running experiments.
@@ -45,17 +45,19 @@ the installation instructions for this package.
   * `generate` contains code for generating data, sample synthetic sets, prompts and utils needed for data generation.
   * `prepare` contains helper functions for partitioning words according to their frequencies.
 
-## Generating datasets
+# Generate the dataset
 
-### Sample sets with numbers or words
+## Create the sets
 
-To sample your own data, you can run the following:
+### Sample sets of numbers or words
+
+To make the CSV file containing sets of words and numbers, run:
 
 ```bash
 python setlexsem/generate/generate_data.py --config_path "configs/generation_data/numbers_and_words.yaml" --seed_value 292 --save_data 1
 ```
 
-### Sample sets based on (approximated) training-set frequency
+### Sample sets based on training-set frequency
 
 To sample sets based on their training-set frequency, we use an approximation based on rank frequency in the Google Books Ngrams corpus.
 
@@ -72,7 +74,8 @@ scripts/make-deciles.sh
 
 This will take ~10 minutes or more, depending on your bandwidth and the speed of your computer.
 
-Then run the following to generate data.
+To make the CSV file containing sets of words sampled by the approximated
+training-set frequency, run:
 
 ```bash
 python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deciles.yaml" --seed_value 292 --save_data 1
@@ -80,27 +83,33 @@ python setlexsem/generate/generate_data.py --config_path "configs/generation_dat
 
 ### Sample "deceptive" sets
 
-To sample "deceptive" sets (see paper for details), create `hyponyms.json` by
-running the following command:
+To sample semantically "deceptive" sets (see paper for details), create `hyponyms.json` by running the following command:
 
 ```bash
 python scripts/make_hyponyms.py --output-path data/hyponyms.json
 ```
 
-## Generating prompts
+To make the CSV file containing deceptive sets:
+```bash
+python setlexsem/generate/generate_data.py --config_path "configs/generation_data/deceptive.yaml" --seed_value 292 --save_data 1
+```
+
+## Create the prompts
+
+Once you've sampled the sets, create the prompts. The prompts are written as CSV files in the `prompts` directory.
 
 ### Example: Sets with numbers
 
-To generate your own data, you can run the following:
+To make the CSV file containing prompts sets of words and numbers, run:
 
 ```bash
 python setlexsem/generate/generate_prompts.py --config_path "configs/generation_prompt/test_config.yaml" --seed_value 292 --save_data 1
 ```
 
-## Running end-to-end evaluation
+## Run the evalution
 
 1. Create a config file like `configs/experiments/anthr_sonnet.yaml`
-2. Run the experiment:
+2. Run the prompts:
 
   ```bash
   python setlexsem/experiment/run_experiments.py --account_number <account-number> --save_file 1 --load_last_run 1 --config_file configs/experiments/anthr_sonnet.yaml
@@ -108,7 +117,7 @@ python setlexsem/generate/generate_prompts.py --config_path "configs/generation_
 
   **Note:** Currently, our experiments are dependent on AWS Bedrock and need an AWS account number to be provided. However, you have the capability to run experiments using OPENAI_KEY. We will add more instructions soon.
 
-3. Post-Processing results (Check whether your study_name is present in the STUDY2MODEL dict in setlexsem/constants.py)
+3. Post-process the results. (Check whether your `study_name` is present in the `STUDY2MODEL` dict in `setlexsem/constants.py`)
 
 ```bash
 python scripts/save_processed_results_for_study_list.py

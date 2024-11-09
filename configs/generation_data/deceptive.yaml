@@ -1,0 +1,15 @@
+set_types:
+  - deceptive_words
+n:
+  - 10000
+m:
+  - 2
+  - 4
+  - 8
+  - 16
+item_len:
+  - null
+overlap_fraction:
+  - null
+swap_status:
+  - false
