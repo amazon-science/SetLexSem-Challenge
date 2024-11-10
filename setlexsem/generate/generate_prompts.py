@@ -11,7 +11,7 @@ from itertools import product
 import pandas as pd
 from tqdm import tqdm
 
-from setlexsem.constants import PATH_PROMPTS_ROOT, PATH_ROOT
+from setlexsem.constants import PATH_PROMPTS_ROOT
 from setlexsem.generate.prompt import (
     PromptConfig,
     get_ground_truth,
@@ -34,15 +34,15 @@ def replace_none(list_in):
 
 
 # define argparser
-def parse_args():
+def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config_path",
+        "--config-path",
         type=str,
-        help="save files to disk",
+        required=True,
+        help="Path to config file for generating prompts",
     )
-    args = parser.parse_args()
-    return args
+    return parser
 
 
 def create_prompt(
@@ -51,7 +51,6 @@ def create_prompt(
     num_runs=100,
     add_roles=False,  # Claude Instant
 ):
-    results = 0
     prompt_and_ground_truth = []
     for i in tqdm(range(num_runs)):
         # create two sets from the sampler
@@ -97,10 +96,8 @@ def main(config_file):
     config = read_config(config_file)
 
     # Experiment config
-    N_RUN = config["N_RUN"]
     RANDOM_SEED_VAL = config["RANDOM_SEED_VAL"]
     OP_LIST = config["OP_LIST"]
-    MODEL_NAME = config["MODEL_NAME"]
 
     # Sampler/Sets Config
     SET_TYPES = config["SET_TYPES"]
@@ -242,7 +239,8 @@ def main(config_file):
 # init
 if __name__ == "__main__":
     # parse args
-    args = parse_args()
+    parser = get_parser()
+    args = parser.parse_args()
     config_path = args.config_path
 
     main(config_path)

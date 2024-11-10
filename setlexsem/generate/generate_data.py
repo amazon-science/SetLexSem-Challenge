@@ -19,24 +19,22 @@ from setlexsem.generate.utils_data_generation import (
 
 
 # define argparser
-def parse_args():
+def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config_path",
+        "--config-path",
         type=str,
         required=True,
-        help="path to config file for data generation",
+        help="Path to config file for generating data",
     )
     parser.add_argument(
-        "--save_data",
-        type=int,
-        required=True,
-        help="save data to disk",
+        "--save-data",
+        action="store_true",
+        help="Save data to disk",
     )
-    parser.add_argument("--number_of_data_points", type=int, default=10000)
-    parser.add_argument("--seed_value", type=int, default=292)
-    args = parser.parse_args()
-    return args
+    parser.add_argument("--number-of-data-points", type=int, default=10000)
+    parser.add_argument("--seed-value", type=int, default=292)
+    return parser
 
 
 def read_data_gen_config(config_path="config.yaml"):
@@ -55,7 +53,8 @@ def read_data_gen_config(config_path="config.yaml"):
 
 if __name__ == "__main__":
     # parse args
-    args = parse_args()
+    parser = get_parser()
+    args = parser.parse_args()
     config_path = args.config_path
     save_data = args.save_data
     NUM_RUNS = args.number_of_data_points
