@@ -6,35 +6,12 @@ import os
 import pandas as pd
 
 from setlexsem.constants import PATH_DATA_ROOT
-from setlexsem.generate.sample import Sampler
 from setlexsem.utils import get_data_filename
 
 # define the logger
 logging.basicConfig()
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(level=logging.INFO)
-
-
-def generate_data(
-    sampler: Sampler,
-    num_runs: int,
-):
-    """Generate random data from the sampler"""
-    # create the dataset
-    set_list = []
-    for i in range(num_runs):
-        # create two sets from the sampler
-        A, B = sampler()
-        # loop through operations (on the same random sets)
-        set_list.append(
-            {
-                "experiment_run": i,
-                "A": A,
-                "B": B,
-            }
-        )
-
-    return set_list
 
 
 def save_generated_data(

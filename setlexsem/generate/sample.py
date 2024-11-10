@@ -77,8 +77,8 @@ class Sampler:
     ValueError
         If m is greater than n.
     """
-    def __init__(self, n: int, m: int, item_len=None, random_state=None):
 
+    def __init__(self, n: int, m: int, item_len=None, random_state=None):
         if m > n:
             raise ValueError(
                 f"m ({m}) should be greater than n ({n}) but {m} <= {n}"
@@ -161,76 +161,21 @@ class Sampler:
 
 
 def make_sampler_name_from_hps(sampler_hps):
-    """
-    Create a formatted string name for a sampler based on its hyperparameters.
+    """Create a formatted string name for a sampler based on its hyperparameters."""
+    n = None if sampler_hps["item_len"] else sampler_hps["n"]
+    components = [
+        f"N-{n}",
+        f"M-{sampler_hps['m']}",
+        f"L-{sampler_hps['item_len']}",
+    ]
 
-    Parameters
-    ----------
-    sampler_hps : list
-        List of sampler hyperparameters.
+    if sampler_hps.get("overlap_fraction") is not None:
+        components.append(f"O-{sampler_hps['overlap_fraction']}")
 
-    Returns
-    -------
-    str
-        Formatted string name for the sampler.
-    """
-    # idx 0: SET_TYPES
-    # idx 1: N
-    # idx 2: M
-    # idx 3: ITEM_LEN
-    # idx 4: DECILE_NUM
-    if sampler_hps[3]:  # if item length is set, we change N to None
-        n = None
-    else:
-        n = sampler_hps[1]
+    if sampler_hps.get("decile_num") is not None:
+        components.append(f"Decile-{sampler_hps['decile_num']}")
 
-    if "decile" in sampler_hps[0]:
-        txt_out = "_".join(
-            [
-                f"N-{n}",
-                f"M-{sampler_hps[2]}",
-                f"L-{sampler_hps[3]}",
-                f"Decile-{sampler_hps[4]}",
-            ]
-        )
-    else:
-        if len(sampler_hps) == 5:  # means we have overlap
-            if sampler_hps[3]:
-                if sampler_hps[4] is not None:
-                    txt_out = "_".join(
-                        [
-                            f"N-{n}",
-                            f"M-{sampler_hps[2]}",
-                            f"L-{sampler_hps[3]}",
-                            f"O-{sampler_hps[4]}",
-                        ]
-                    )
-                else:
-                    txt_out = "_".join(
-                        [
-                            f"N-{n}",
-                            f"M-{sampler_hps[2]}",
-                            f"L-{sampler_hps[3]}",
-                        ]
-                    )
-            else:
-                txt_out = "_".join(
-                    [
-                        f"N-{n}",
-                        f"M-{sampler_hps[2]}",
-                        f"L-{sampler_hps[3]}",
-                    ]
-                )
-        else:
-            txt_out = "_".join(
-                [
-                    f"N-{n}",
-                    f"M-{sampler_hps[2]}",
-                    f"L-{sampler_hps[3]}",
-                ]
-            )
-
-    return txt_out
+    return "_".join(components)
 
 
 def filter_words(words, item_len):
@@ -286,6 +231,7 @@ class BasicWordSampler(Sampler):
     random_state : Random, optional
         Random number generator.
     """
+
     def __init__(
         self,
         n: int,

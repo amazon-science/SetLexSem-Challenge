@@ -73,10 +73,15 @@ def get_prompt_file_path(sampler_hp, prompt_hp, random_seed):
     """
     sampler_name = make_sampler_name_from_hps(sampler_hp)
     filename_experiment = create_filename(
-        prompt_hp[2], sampler_name, prompt_hp[1], random_seed
+        prompt_hp["prompt_type"],
+        sampler_name,
+        prompt_hp["k_shot"],
+        random_seed,
     )
     experiment_folder_structure = os.path.join(
-        sampler_hp[0], prompt_hp[0], prompt_hp[3]
+        sampler_hp["set_type"],
+        prompt_hp["op_list"],
+        prompt_hp["prompt_approach"],
     )
     return experiment_folder_structure, filename_experiment
 

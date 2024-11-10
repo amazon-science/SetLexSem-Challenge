@@ -1,7 +1,9 @@
 import argparse
+import itertools
 import logging
 import random
 from itertools import product
+from typing import Any, Dict, Iterable, List
 
 import yaml
 
@@ -11,11 +13,9 @@ from setlexsem.generate.sample import (
     DeceptiveWordSampler,
     DecileWordSampler,
     OverlapSampler,
+    Sampler,
 )
-from setlexsem.generate.utils_data_generation import (
-    generate_data,
-    save_generated_data,
-)
+from setlexsem.generate.utils_data_generation import save_generated_data
 
 
 # define argparser
@@ -37,6 +37,28 @@ def get_parser():
     return parser
 
 
+def generate_data_from_sampler(
+    sampler: Sampler,
+    num_runs: int,
+):
+    """Generate random data from the sampler"""
+    # create the dataset
+    set_list = []
+    for i in range(num_runs):
+        # create two sets from the sampler
+        A, B = sampler()
+        # loop through operations (on the same random sets)
+        set_list.append(
+            {
+                "experiment_run": i,
+                "A": A,
+                "B": B,
+            }
+        )
+
+    return set_list
+
+
 def read_data_gen_config(config_path="config.yaml"):
     """Read config file from YAML"""
     try:
@@ -51,107 +73,176 @@ def read_data_gen_config(config_path="config.yaml"):
         raise yaml.YAMLError(f"Error parsing YAML file: {e}")
 
 
+def make_hps(
+    set_types=None,
+    n=None,
+    m=None,
+    item_len=None,
+    decile_group=None,
+    swap_status=None,
+    overlap_fraction=None,
+    config: Dict = {},
+):
+    if config:
+        set_types = config["set_types"]
+        n = config.get("n")
+        m = config.get("m")
+        item_len = config.get("item_len")
+        decile_group = config.get("decile_group")
+        swap_status = config.get("swap_status")
+        overlap_fraction = config.get("overlap_fraction")
+
+    # Wrap each parameter in a list if it isn’t already, to enable Cartesian product
+    param_grid = {
+        "set_type": set_types if isinstance(set_types, list) else [set_types],
+        "n": n if isinstance(n, list) else [n],
+        "m": m if isinstance(m, list) else [m],
+        "item_len": item_len if isinstance(item_len, list) else [item_len],
+        "decile_group": decile_group
+        if isinstance(decile_group, list)
+        else [decile_group],
+        "swap_status": swap_status
+        if isinstance(swap_status, list)
+        else [swap_status],
+        "overlap_fraction": overlap_fraction
+        if isinstance(overlap_fraction, list)
+        else [overlap_fraction],
+    }
+
+    # Generate combinations of all parameters as dictionaries
+    keys, values = zip(*param_grid.items())
+    return (dict(zip(keys, v)) for v in product(*values))
+
+
+def get_sampler(hp, random_state):
+    set_type = hp["set_type"]
+
+    if set_type == "numbers":
+        sampler = BasicNumberSampler(
+            n=hp["n"],
+            m=hp["m"],
+            item_len=hp.get("item_len"),
+            random_state=random_state,
+        )
+    elif set_type == "words":
+        sampler = BasicWordSampler(
+            n=hp["n"],
+            m=hp["m"],
+            item_len=hp.get("item_len"),
+            random_state=random_state,
+        )
+    elif set_type == "deceptive_words":
+        sampler = DeceptiveWordSampler(
+            n=hp["n"],
+            m=hp["m"],
+            random_state=random_state,
+            swap_set_elements=hp.get("swap_status"),
+            swap_n=hp["m"] // 2,
+        )
+    elif set_type == "deciles":
+        sampler = DecileWordSampler(
+            n=hp["n"],
+            m=hp["m"],
+            item_len=hp.get("item_len"),
+            decile_num=hp.get("decile_group"),
+        )
+
+    # create overlapping sets
+    if hp["overlap_fraction"] is not None:
+        sampler = OverlapSampler(
+            sampler, overlap_fraction=hp.get("overlap_fraction")
+        )
+
+    return sampler
+
+
+def generate_data(
+    set_types=None,
+    n=None,
+    m=None,
+    item_len=None,
+    decile_group=None,
+    swap_status=None,
+    overlap_fraction=None,
+    config: Dict = {},
+    number_of_data_points=100,
+    seed_value=292,
+):
+    if config:
+        set_types = config["set_types"]
+        n = config.get("n")
+        m = config.get("m")
+        item_len = config.get("item_len")
+        decile_group = config.get("decile_group")
+        swap_status = config.get("swap_status")
+        overlap_fraction = config.get("overlap_fraction")
+
+    make_hps_generator = make_hps(
+        set_types, n, m, item_len, decile_group, swap_status, overlap_fraction
+    )
+    output = {}
+    for hp in make_hps_generator:
+        random_state = random.Random(seed_value)
+
+        try:
+            sampler = get_sampler(hp, random_state)
+
+            dict_gen_data = generate_data_from_sampler(
+                sampler=sampler, num_runs=number_of_data_points
+            )
+        except:
+            continue
+
+        output[tuple(hp.items())] = dict_gen_data
+
+    return output
+
+
 if __name__ == "__main__":
     # parse args
     parser = get_parser()
     args = parser.parse_args()
     config_path = args.config_path
     save_data = args.save_data
-    NUM_RUNS = args.number_of_data_points
-    SEED_VALUE = args.seed_value
+    number_of_data_points = args.number_of_data_points
+    seed_value = args.seed_value
+    overwrite = args.overwrite
 
     # read config file
     config = read_data_gen_config(config_path=config_path)
 
     # add logger
-    LOGGER = logging.getLogger(__name__)
-    LOGGER.setLevel(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=logging.INFO)
 
-    if config["set_types"][0] == "deceptive_words":
+    make_hps_generator = make_hps(config=config)
+    make_hps_generator, make_hps_generator_copy = itertools.tee(
+        make_hps_generator
+    )
+    n_experiments = len(list(make_hps_generator_copy))
+    logger.info(f"Experiment will run for {n_experiments} times")
 
-        def make_hps():
-            return product(
-                config["set_types"],
-                config["n"],
-                config["m"],
-                config["swap_status"],
-            )
-
-    elif config["set_types"][0] == "deciles":
-
-        def make_hps():
-            return product(
-                config["set_types"],
-                config["n"],
-                config["m"],
-                config["item_len"],
-                config["decile_group"],
-                config["overlap_fraction"],
-            )
-
-    else:
-
-        def make_hps():
-            return product(
-                config["set_types"],
-                config["n"],
-                config["m"],
-                config["item_len"],
-                config["overlap_fraction"],
-            )  # this is a generator
-
-    n_experiments = len(list(make_hps()))
-    print(f"Experiment will run for {n_experiments} times")
-
-    # hp-0 set type | hp-1 N | hp-2 M | hp-3 item_len
-    for hp in make_hps():
-        random_state = random.Random(SEED_VALUE)
-
+    for hp in make_hps_generator:
+        random_state = random.Random(seed_value)
         try:
-            if hp[0] == "numbers" or "BasicNumberSampler" in hp[0]:
-                sampler = BasicNumberSampler(
-                    n=hp[1],
-                    m=hp[2],
-                    item_len=hp[3],
-                    random_state=random_state,
-                )
-            elif hp[0] == "words" or "BasicWordSampler" in hp[0]:
-                sampler = BasicWordSampler(
-                    n=hp[1],
-                    m=hp[2],
-                    item_len=hp[3],
-                    random_state=random_state,
-                )
-            elif hp[0] == "deceptive_words":
-                sampler = DeceptiveWordSampler(
-                    n=hp[1],
-                    m=hp[2],
-                    random_state=random_state,
-                    swap_set_elements=hp[3],
-                    swap_n=hp[2] // 2,
-                )
+            sampler = get_sampler(hp, random_state)
 
-            elif hp[0] == "deciles":
-                sampler = DecileWordSampler(
-                    n=hp[1], m=hp[2], item_len=hp[3], decile_num=hp[4]
-                )
+            dict_gen_data = generate_data_from_sampler(
+                sampler=sampler, num_runs=number_of_data_points
+            )
 
-            # add overlapping
-            if "overlapping" in hp[0]:
-                sampler = OverlapSampler(sampler, overlap_fraction=hp[4])
-
-            dict_gen_data = generate_data(sampler=sampler, num_runs=NUM_RUNS)
-
-            LOGGER.info(f"Generated {sampler}")
+            logger.info(f"Generated {sampler}")
             if save_data:
                 save_generated_data(
                     dict_gen_data,
                     sampler,
-                    SEED_VALUE,
-                    NUM_RUNS,
-                    overwrite=False,
+                    seed_value,
+                    number_of_data_points,
+                    overwrite=overwrite,
                 )
 
         except Exception as e:
-            LOGGER.warning(f"skipping: {e} / {sampler}")
+            logger.warning(f"skipping: {e} / {sampler}")
             continue
+
+    logger.info("Dataset is complete!")
