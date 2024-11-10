@@ -4,6 +4,65 @@ This research repository maintains the code and the results for the research pap
 
 _"Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set."_ -[Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/set-theory/)
 
+# Install Package from PyPI and Use
+To install the package, please run:
+```pip install setlexsem```
+You can generate the dataset by:
+```python
+from setlexsem.generate.generate_data import generate_data
+generate_data(
+    set_types=["numbers"],
+    n=[10],
+    m=[1,2],
+    item_len=[1],
+    decile_group=None,
+    swap_status=None,
+    overlap_fraction=[None],
+    seed_value=292,
+    number_of_data_points= 3
+)
+# --- or, this can be config based:
+config = {
+    "set_types": ["numbers"],
+    "n": [10],
+    "m": [10],
+    "item_len": [2],
+    "decile_group": None,
+    "swap_status": None,
+    "overlap_fraction": [0.5],
+}
+out_data = generate_data(
+    config=config,
+    number_of_data_points= 5,
+    seed_value=292
+)
+```
+You can generate the prompts by:
+```python
+from setlexsem.generate.generate_prompts import generate_prompts
+
+generate_prompts(
+    # data config
+    set_types=["numbers"],
+    n=[10],
+    m=[1,2],
+    item_len=[1,3],
+    decile_group=None,
+    swap_status=None,
+    overlap_fraction=[None],
+    number_of_data_points= 5,
+    random_seed_value=292,
+    # prompt config
+    op_list=["union", "intersection"],
+    k_shot=[0, 1, 3],
+    prompt_type=["formal_language"],
+    prompt_approach=["baseline", "chain_of_thought"],
+    is_fix_shot=[True],
+    add_roles=False)
+```
+
+
+
 # Install
 
 When installing, it's important to upgrade to the most recent pip. This ensures that `setup.py` runs correctly. An outdated version of pip can fail to run the `InstallNltkWordnetAfterPackages` command class in setup.py and cause subsequent errors.
