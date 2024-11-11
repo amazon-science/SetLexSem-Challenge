@@ -6,6 +6,7 @@ import os
 import pandas as pd
 
 from setlexsem.constants import PATH_DATA_ROOT
+from setlexsem.generate.sample import Sampler
 from setlexsem.utils import get_data_filename
 
 # define the logger
@@ -14,11 +15,11 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(level=logging.INFO)
 
 
-def save_generated_data(
+def save_generated_sets(
     set_list,
-    sampler,
-    random_seed,
-    num_runs,
+    sampler: Sampler,
+    random_seed: int,
+    num_runs: int,
     overwrite=False,
     rename_sampler=None,
 ):
@@ -49,7 +50,9 @@ def save_generated_data(
         LOGGER.info(f"Data already exists at {path_data}, skipping...")
 
 
-def load_generated_data(sampler, random_seed, num_runs_data_stored_at=10000):
+def load_generated_data(
+    sampler: Sampler, random_seed, num_runs_data_stored_at=10000
+):
     """Load generated data from the sampler as a generator iterator"""
     # prepare filenames and check if the file exist
     filename = get_data_filename(

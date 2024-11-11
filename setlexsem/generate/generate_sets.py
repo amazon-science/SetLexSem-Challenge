@@ -3,7 +3,7 @@ import itertools
 import logging
 import random
 from itertools import product
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Tuple
 
 import yaml
 
@@ -15,7 +15,7 @@ from setlexsem.generate.sample import (
     OverlapSampler,
     Sampler,
 )
-from setlexsem.generate.utils_data_generation import save_generated_data
+from setlexsem.generate.utils_io import save_generated_sets
 
 
 # define argparser
@@ -34,19 +34,22 @@ def get_parser():
     )
     parser.add_argument("--number-of-data-points", type=int, default=10000)
     parser.add_argument("--seed-value", type=int, default=292)
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite data"
+    )
     return parser
 
 
-def generate_data_from_sampler(
-    sampler: Sampler,
+def make_sets_from_sampler(
+    sample_set: Sampler,
     num_runs: int,
-):
-    """Generate random data from the sampler"""
+) -> List[Dict[str, Any]]:
+    """Generate random sets from the sampler"""
     # create the dataset
     set_list = []
     for i in range(num_runs):
         # create two sets from the sampler
-        A, B = sampler()
+        A, B = sample_set()
         # loop through operations (on the same random sets)
         set_list.append(
             {
@@ -59,7 +62,7 @@ def generate_data_from_sampler(
     return set_list
 
 
-def read_data_gen_config(config_path="config.yaml"):
+def read_config_make_sets(config_path: str = "config.yaml"):
     """Read config file from YAML"""
     try:
         with open(config_path, "r") as file:
@@ -81,8 +84,8 @@ def make_hps(
     decile_group=None,
     swap_status=None,
     overlap_fraction=None,
-    config: Dict = {},
-):
+    config: Dict[str, Any] = {},
+) -> Iterable:
     if config:
         set_types = config["set_types"]
         n = config.get("n")
@@ -114,7 +117,7 @@ def make_hps(
     return (dict(zip(keys, v)) for v in product(*values))
 
 
-def get_sampler(hp, random_state):
+def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_type"]
 
     if set_type == "numbers":
@@ -156,7 +159,7 @@ def get_sampler(hp, random_state):
     return sampler
 
 
-def generate_data(
+def make_sets(
     set_types=None,
     n=None,
     m=None,
@@ -164,10 +167,10 @@ def generate_data(
     decile_group=None,
     swap_status=None,
     overlap_fraction=None,
-    config: Dict = {},
-    number_of_data_points=100,
-    seed_value=292,
-):
+    config: Dict[str, Any] = {},
+    number_of_data_points: int = 100,
+    seed_value: int = 292,
+) -> Tuple[Dict[Any, Any], Sampler]:
     if config:
         set_types = config["set_types"]
         n = config.get("n")
@@ -180,22 +183,25 @@ def generate_data(
     make_hps_generator = make_hps(
         set_types, n, m, item_len, decile_group, swap_status, overlap_fraction
     )
-    output = {}
+    all_sets = []
     for hp in make_hps_generator:
         random_state = random.Random(seed_value)
 
         try:
             sampler = get_sampler(hp, random_state)
 
-            dict_gen_data = generate_data_from_sampler(
-                sampler=sampler, num_runs=number_of_data_points
+            synthetic_sets = make_sets_from_sampler(
+                sample_set=sampler, num_runs=number_of_data_points
             )
         except:
             continue
 
-        output[tuple(hp.items())] = dict_gen_data
+        temp_hp = hp
+        for ds in synthetic_sets:
+            temp_hp.update(ds)
+            all_sets.append(temp_hp)
 
-    return output
+    return all_sets, sampler
 
 
 if __name__ == "__main__":
@@ -206,10 +212,9 @@ if __name__ == "__main__":
     save_data = args.save_data
     number_of_data_points = args.number_of_data_points
     seed_value = args.seed_value
-    overwrite = args.overwrite
 
     # read config file
-    config = read_data_gen_config(config_path=config_path)
+    config = read_config_make_sets(config_path=config_path)
 
     # add logger
     logger = logging.getLogger(__name__)
@@ -219,30 +224,30 @@ if __name__ == "__main__":
     make_hps_generator, make_hps_generator_copy = itertools.tee(
         make_hps_generator
     )
-    n_experiments = len(list(make_hps_generator_copy))
-    logger.info(f"Experiment will run for {n_experiments} times")
+    n_configurations = len(list(make_hps_generator_copy))
+    logger.info(f"Creating sets for {n_configurations} configurations...")
 
     for hp in make_hps_generator:
         random_state = random.Random(seed_value)
         try:
             sampler = get_sampler(hp, random_state)
 
-            dict_gen_data = generate_data_from_sampler(
-                sampler=sampler, num_runs=number_of_data_points
+            synthetic_sets = make_sets_from_sampler(
+                sample_set=sampler, num_runs=number_of_data_points
             )
 
             logger.info(f"Generated {sampler}")
             if save_data:
-                save_generated_data(
-                    dict_gen_data,
+                save_generated_sets(
+                    synthetic_sets,
                     sampler,
                     seed_value,
                     number_of_data_points,
-                    overwrite=overwrite,
+                    overwrite=args.overwrite,
                 )
 
         except Exception as e:
-            logger.warning(f"skipping: {e} / {sampler}")
+            logger.warning(f"Skipping: {e} / {sampler}")
             continue
 
-    logger.info("Dataset is complete!")
+    logger.info("Dataset is created!")

@@ -14,14 +14,14 @@ import pandas as pd
 from tqdm import tqdm
 
 from setlexsem.constants import PATH_PROMPTS_ROOT
-from setlexsem.generate.generate_data import get_sampler, make_hps
+from setlexsem.generate.generate_sets import get_sampler, make_hps
 from setlexsem.generate.prompt import (
     PromptConfig,
     get_ground_truth,
     get_prompt,
 )
 from setlexsem.generate.sample import Sampler
-from setlexsem.generate.utils_data_generation import load_generated_data
+from setlexsem.generate.utils_io import load_generated_data
 from setlexsem.utils import get_prompt_file_path, read_config
 
 

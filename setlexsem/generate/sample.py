@@ -159,6 +159,9 @@ class Sampler:
             "item_len": self.item_len,
         }
 
+    def get_members_type(self):
+        return None
+
 
 def make_sampler_name_from_hps(sampler_hps):
     """Create a formatted string name for a sampler based on its hyperparameters."""

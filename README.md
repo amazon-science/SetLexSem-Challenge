@@ -9,8 +9,8 @@ To install the package, please run:
 ```pip install setlexsem```
 You can generate the dataset by:
 ```python
-from setlexsem.generate.generate_data import generate_data
-generate_data(
+from setlexsem.generate.generate_sets import make_sets
+make_sets(
     set_types=["numbers"],
     n=[10],
     m=[1,2],
@@ -31,7 +31,7 @@ config = {
     "swap_status": None,
     "overlap_fraction": [0.5],
 }
-out_data = generate_data(
+out_data = make_sets(
     config=config,
     number_of_data_points= 5,
     seed_value=292
@@ -113,7 +113,7 @@ the installation instructions for this package.
 To make the CSV file containing sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_data.py --config-path "configs/generation_data/numbers_and_words.yaml" --seed-value 292 --save-data 
+python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/numbers_and_words.yaml" --seed-value 292 --save-data
 ```
 
 ### Sample sets based on training-set frequency
@@ -137,7 +137,7 @@ To make the CSV file containing sets of words sampled by the approximated
 training-set frequency, run:
 
 ```bash
-python setlexsem/generate/generate_data.py --config-path "configs/generation_data/deciles.yaml" --seed-value 292 --save-data
+python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/deciles.yaml" --seed-value 292 --save-data
 ```
 
 ### Sample "deceptive" sets
@@ -150,7 +150,7 @@ python scripts/make_hyponyms.py --output-path data/hyponyms.json
 
 To make the CSV file containing deceptive sets:
 ```bash
-python setlexsem/generate/generate_data.py --config-path "configs/generation_data/deceptive.yaml" --seed-value 292 --save-data 
+python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/deceptive.yaml" --seed-value 292 --save-data
 ```
 
 ## Create the prompts
