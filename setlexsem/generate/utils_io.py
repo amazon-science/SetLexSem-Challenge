@@ -15,33 +15,11 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(level=logging.INFO)
 
 
-def generate_data(
-    sampler: Sampler,
-    num_runs: int,
-):
-    """Generate random data from the sampler"""
-    # create the dataset
-    set_list = []
-    for i in range(num_runs):
-        # create two sets from the sampler
-        A, B = sampler()
-        # loop through operations (on the same random sets)
-        set_list.append(
-            {
-                "experiment_run": i,
-                "A": A,
-                "B": B,
-            }
-        )
-
-    return set_list
-
-
-def save_generated_data(
+def save_generated_sets(
     set_list,
-    sampler,
-    random_seed,
-    num_runs,
+    sampler: Sampler,
+    random_seed: int,
+    num_runs: int,
     overwrite=False,
     rename_sampler=None,
 ):
@@ -72,7 +50,9 @@ def save_generated_data(
         LOGGER.info(f"Data already exists at {path_data}, skipping...")
 
 
-def load_generated_data(sampler, random_seed, num_runs_data_stored_at=10000):
+def load_generated_data(
+    sampler: Sampler, random_seed, num_runs_data_stored_at=10000
+):
     """Load generated data from the sampler as a generator iterator"""
     # prepare filenames and check if the file exist
     filename = get_data_filename(

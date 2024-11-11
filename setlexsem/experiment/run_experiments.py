@@ -10,7 +10,6 @@ import pandas as pd
 from setlexsem.constants import PATH_RESULTS_ROOT, PATH_ROOT
 from setlexsem.experiment.experiment import run_experiment
 from setlexsem.experiment.lmapi import LMClass
-from setlexsem.generate import load_generated_data
 from setlexsem.generate.prompt import PromptConfig
 from setlexsem.generate.sample import (
     BasicNumberSampler,
@@ -19,6 +18,7 @@ from setlexsem.generate.sample import (
     DecileWordSampler,
     OverlapSampler,
 )
+from setlexsem.generate.utils_io import load_generated_data
 from setlexsem.utils import get_study_paths, read_config
 
 
@@ -31,16 +31,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # add account number
     parser.add_argument(
-        "--account-number",
-        type=str,
-        required=True,
-        help="AWS account number"
+        "--account-number", type=str, required=True, help="AWS account number"
     )
     parser.add_argument(
         "--config-file",
         type=str,
         default=os.path.join(PATH_ROOT, "config.yaml"),
-        help="Path to experiment config file"
+        help="Path to experiment config file",
     )
     parser.add_argument(
         "--save-files",

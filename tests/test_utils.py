@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
 
-from setlexsem.utils import read_config
+import pytest
+
+from setlexsem.utils import create_filename, create_param_format, read_config
 
 
 class TestReadConfig(unittest.TestCase):
@@ -47,3 +49,32 @@ class TestReadConfig(unittest.TestCase):
         self.assertEqual(config_values["PROMPT_TYPE"], ["formal_language"])
         self.assertEqual(config_values["PROMPT_APPROACH"], ["baseline"])
         self.assertEqual(config_values["IS_FIX_SHOT"], [True])
+
+
+@pytest.mark.parametrize(
+    "sampler_name, random_seed_value, expected",
+    [
+        ("SamplerA", 42, "SamplerA_S-42"),
+        ("TestSampler", 123, "TestSampler_S-123"),
+        ("SamplerX", 999, "SamplerX_S-999"),
+    ],
+)
+def test_create_param_format(sampler_name, random_seed_value, expected):
+    assert create_param_format(sampler_name, random_seed_value) == expected
+
+
+@pytest.mark.parametrize(
+    "prompt_type, sampler_name, k_shot, random_seed_value, expected",
+    [
+        ("TypeA", "SamplerA", 5, 42, "TypeA_K-5_SamplerA_S-42.csv"),
+        ("TypeB", "TestSampler", 10, 123, "TypeB_K-10_TestSampler_S-123.csv"),
+        ("TypeC", "SamplerX", 1, 999, "TypeC_K-1_SamplerX_S-999.csv"),
+    ],
+)
+def test_create_filename(
+    prompt_type, sampler_name, k_shot, random_seed_value, expected
+):
+    assert (
+        create_filename(prompt_type, sampler_name, k_shot, random_seed_value)
+        == expected
+    )

@@ -16,3 +16,4 @@ item_len:
   - null
 overlap_fraction:
   - null
+  - 0.5
