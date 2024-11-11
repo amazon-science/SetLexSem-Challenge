@@ -162,7 +162,7 @@ Once you've sampled the sets, create the prompts. The prompts are written as CSV
 To make the CSV file containing prompts sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_prompts.py --config_path "configs/generation_prompt/test_config.yaml"
+python setlexsem/generate/generate_prompts.py --config-path "configs/generation_prompt/test_config.yaml" --save-data
 ```
 
 ## Run the evalution

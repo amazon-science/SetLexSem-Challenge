@@ -76,7 +76,7 @@ def read_config_make_sets(config_path: str = "config.yaml"):
         raise yaml.YAMLError(f"Error parsing YAML file: {e}")
 
 
-def make_hps(
+def make_hps_set(
     set_types=None,
     n=None,
     m=None,
@@ -180,7 +180,7 @@ def make_sets(
         swap_status = config.get("swap_status")
         overlap_fraction = config.get("overlap_fraction")
 
-    make_hps_generator = make_hps(
+    make_hps_generator = make_hps_set(
         set_types, n, m, item_len, decile_group, swap_status, overlap_fraction
     )
     all_sets = []
@@ -201,7 +201,7 @@ def make_sets(
             temp_hp.update(ds)
             all_sets.append(temp_hp)
 
-    return all_sets, sampler
+    return all_sets
 
 
 if __name__ == "__main__":
@@ -212,6 +212,7 @@ if __name__ == "__main__":
     save_data = args.save_data
     number_of_data_points = args.number_of_data_points
     seed_value = args.seed_value
+    overwrite = args.overwrite
 
     # read config file
     config = read_config_make_sets(config_path=config_path)
@@ -220,7 +221,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     logger.setLevel(level=logging.INFO)
 
-    make_hps_generator = make_hps(config=config)
+    make_hps_generator = make_hps_set(config=config)
     make_hps_generator, make_hps_generator_copy = itertools.tee(
         make_hps_generator
     )
@@ -243,7 +244,7 @@ if __name__ == "__main__":
                     sampler,
                     seed_value,
                     number_of_data_points,
-                    overwrite=args.overwrite,
+                    overwrite=overwrite,
                 )
 
         except Exception as e:

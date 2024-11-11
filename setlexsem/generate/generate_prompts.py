@@ -14,7 +14,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from setlexsem.constants import PATH_PROMPTS_ROOT
-from setlexsem.generate.generate_sets import get_sampler, make_hps
+from setlexsem.generate.generate_sets import get_sampler, make_hps_set
 from setlexsem.generate.prompt import (
     PromptConfig,
     get_ground_truth,
@@ -37,6 +37,14 @@ def get_parser():
         type=str,
         required=True,
         help="Path to config file for generating prompts",
+    )
+    parser.add_argument(
+        "--save-data",
+        action="store_true",
+        help="Save data to disk",
+    )
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite data"
     )
     return parser
 
@@ -77,7 +85,7 @@ def make_hps_prompt(
     return (dict(zip(keys, v)) for v in product(*values))
 
 
-def get_prompt_class(
+def get_prompt_config(
     prompt_config: Dict[str, List[Union[str, int]]], k_shot_sampler: Sampler
 ):
     """Convert dictionary to PromptConfig class"""
@@ -94,7 +102,7 @@ def get_prompt_class(
     return prompt_config_ready
 
 
-def create_the_prompt(
+def create_prompts_from_sampler(
     sampler: Sampler,
     prompt_config: Dict[str, List[Union[str, int]]],
     k_shot_sampler: Sampler,
@@ -103,7 +111,7 @@ def create_the_prompt(
 ):
     """Create the prompt and the ground truth from Sampler and PromptConfig"""
     # get prompt config
-    prompt_config_ready = get_prompt_class(prompt_config, k_shot_sampler)
+    prompt_config_ready = get_prompt_config(prompt_config, k_shot_sampler)
 
     results = 0
     prompt_and_ground_truth = []
@@ -139,7 +147,7 @@ def create_the_prompt(
     return prompt_and_ground_truth
 
 
-def generate_prompts(
+def create_prompts(
     set_types=None,
     n=None,
     m=None,
@@ -161,9 +169,9 @@ def generate_prompts(
     """Generate prompts for the given hyperparameters"""
     # generator for set construction
     if data_config:
-        make_hps_generator = make_hps(config=data_config)
+        make_hps_generator = make_hps_set(config=data_config)
     else:
-        make_hps_generator = make_hps(
+        make_hps_generator = make_hps_set(
             config={
                 "set_types": set_types,
                 "n": n,
@@ -177,7 +185,7 @@ def generate_prompts(
 
     # generator for prompts
     if prompt_config:
-        make_hps_generator = make_hps(config=prompt_config)
+        make_hps_generator = make_hps_prompt(config=prompt_config)
     else:
         make_hps_prompt_generator = make_hps_prompt(
             config={
@@ -197,7 +205,6 @@ def generate_prompts(
     n_experiments = len(list(make_hps_prompt_generator)) * len(
         list(make_hps_generator_copy)
     )
-    print(f"Experiment will run for {n_experiments} times")
 
     # go through hyperparameters and run the experiment
     counter_exp = 1
@@ -232,7 +239,7 @@ def generate_prompts(
 
             # Create prompts
             try:
-                prompt_and_ground_truth = create_the_prompt(
+                prompt_and_ground_truth = create_prompts_from_sampler(
                     sampler,
                     prompt_config=hp_prompt,
                     k_shot_sampler=k_shot_sampler,
@@ -252,9 +259,9 @@ def generate_prompts(
     return output
 
 
-def main(config_file):
-    LOGGER = logging.getLogger(__name__)
-    LOGGER.setLevel(level=logging.INFO)
+def main(config_file, save_data, overwrite):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=logging.INFO)
 
     # TODO: Add this to Config
     SWAP_STATUS = False
@@ -298,7 +305,7 @@ def main(config_file):
         }
     )
     # generator for set construction
-    make_hps_generator = make_hps(
+    make_hps_generator = make_hps_set(
         config={
             "set_types": SET_TYPES,
             "n": N,
@@ -317,7 +324,7 @@ def main(config_file):
     n_experiments = len(list(make_hps_prompt_generator)) * len(
         list(make_hps_generator_copy)
     )
-    LOGGER.info(f"Experiment will run for {n_experiments} times")
+    logger.info(f"Creating prompts for {n_experiments} configurations...")
 
     # go through hyperparameters and run the experiment
     counter_exp = 1
@@ -332,7 +339,7 @@ def main(config_file):
             }
         )
         for hp_prompt in make_hps_prompt_generator:
-            LOGGER.info(
+            logger.info(
                 f"-------- EXPERIMENT #{counter_exp} out of {n_experiments}"
             )
 
@@ -343,10 +350,10 @@ def main(config_file):
             try:
                 sampler = get_sampler(hp, random_state)
             except Exception as e:
-                LOGGER.error(f"------> Error: Skipping this experiment: {e}")
+                logger.error(f"------> Error: Skipping this experiment: {e}")
                 counter_exp += 1
                 continue
-            LOGGER.info(sampler)
+            logger.info(sampler)
 
             # create kshot sampler, before loading data
             k_shot_sampler = sampler.create_sampler_for_k_shot()
@@ -356,7 +363,7 @@ def main(config_file):
 
             # Create prompts
             try:
-                prompt_and_ground_truth = create_the_prompt(
+                prompt_and_ground_truth = create_prompts_from_sampler(
                     sampler,
                     prompt_config=hp_prompt,
                     k_shot_sampler=k_shot_sampler,
@@ -364,7 +371,7 @@ def main(config_file):
                     add_roles=add_roles,  # Claude Instant
                 )
             except Exception as e:
-                LOGGER.error(f"------> Error: Skipping this experiment: {e}")
+                logger.error(f"------> Error: Skipping this experiment: {e}")
                 counter_exp += 1
                 continue
 
@@ -377,13 +384,15 @@ def main(config_file):
             path_to_prompts = os.path.join(
                 PATH_PROMPTS_ROOT, folder_structure, filename
             )
-            os.makedirs(os.path.dirname(path_to_prompts), exist_ok=True)
-            # save prompts
-            pd.DataFrame(prompt_and_ground_truth).to_csv(
-                path_to_prompts, index=False
-            )
+            if save_data:
+                os.makedirs(os.path.dirname(path_to_prompts), exist_ok=True)
+                # save prompts
+                if os.path.exists(path_to_prompts) and not overwrite:
+                    pd.DataFrame(prompt_and_ground_truth).to_csv(
+                        path_to_prompts, index=False
+                    )
 
-    LOGGER.info("Done!")
+    logger.info("Done!")
 
 
 # init
@@ -392,5 +401,7 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     config_path = args.config_path
+    save_data = args.save_data
+    overwrite = args.overwrite
 
-    main(config_path)
+    main(config_path, save_data, overwrite)
