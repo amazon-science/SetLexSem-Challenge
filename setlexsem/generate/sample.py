@@ -717,6 +717,8 @@ class DeceptiveWordSampler(Sampler):
                 f"Subset to mix ({subset_size}) is bigger than "
                 f"either A ({len(A)}) or B ({len(B)})"
             )
+        self.subset_size = subset_size
+
         A, B = list(A), list(B)
         a = A[-subset_size:]
         b = B[-subset_size:]
@@ -733,7 +735,10 @@ class DeceptiveWordSampler(Sampler):
         str
             Type of members ("deceptive_words").
         """
-        return f"deceptive_words_{self.swap_set_elements}"
+        if self.swap_set_elements:
+            return f"deceptive_words_swapped_{self.subset_size}_members"
+        else:
+            return "deceptive_words"
 
 
 class DecileWordSampler(BasicWordSampler):

@@ -13,3 +13,4 @@ overlap_fraction:
   - null
 swap_status:
   - false
+  - true

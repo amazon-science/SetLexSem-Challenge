@@ -17,6 +17,10 @@ from setlexsem.generate.sample import (
 )
 from setlexsem.generate.utils_io import save_generated_sets
 
+# add logger and line number
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+
 
 # define argparser
 def get_parser():
@@ -45,19 +49,23 @@ def make_sets_from_sampler(
     num_runs: int,
 ) -> List[Dict[str, Any]]:
     """Generate random sets from the sampler"""
-    # create the dataset
+
+    # initlize the dataset
     set_list = []
     for i in range(num_runs):
-        # create two sets from the sampler
-        A, B = sample_set()
-        # loop through operations (on the same random sets)
-        set_list.append(
-            {
-                "experiment_run": i,
-                "A": A,
-                "B": B,
-            }
-        )
+        try:
+            # create two sets from the sampler
+            A, B = sample_set()
+            # loop through operations (on the same random sets)
+            set_list.append(
+                {
+                    "experiment_run": i,
+                    "A": A,
+                    "B": B,
+                }
+            )
+        except:
+            continue
 
     return set_list
 
@@ -120,20 +128,29 @@ def make_hps_set(
 def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_type"]
 
-    if set_type == "numbers":
+    if "numbers" in hp["set_type"]:
         sampler = BasicNumberSampler(
             n=hp["n"],
             m=hp["m"],
             item_len=hp.get("item_len"),
             random_state=random_state,
         )
-    elif set_type == "words":
-        sampler = BasicWordSampler(
-            n=hp["n"],
-            m=hp["m"],
-            item_len=hp.get("item_len"),
-            random_state=random_state,
-        )
+    elif "words" in set_type:
+        if hp["decile_group"] is None:
+            sampler = BasicWordSampler(
+                n=hp["n"],
+                m=hp["m"],
+                item_len=hp.get("item_len"),
+                random_state=random_state,
+            )
+        else:
+            sampler = DecileWordSampler(
+                n=hp["n"],
+                m=hp["m"],
+                item_len=hp.get("item_len"),
+                decile_num=hp.get("decile_group"),
+                random_state=random_state,
+            )
     elif set_type == "deceptive_words":
         sampler = DeceptiveWordSampler(
             n=hp["n"],
@@ -141,13 +158,6 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
             random_state=random_state,
             swap_set_elements=hp.get("swap_status"),
             swap_n=hp["m"] // 2,
-        )
-    elif set_type == "deciles":
-        sampler = DecileWordSampler(
-            n=hp["n"],
-            m=hp["m"],
-            item_len=hp.get("item_len"),
-            decile_num=hp.get("decile_group"),
         )
 
     # create overlapping sets
@@ -190,10 +200,12 @@ def make_sets(
         try:
             sampler = get_sampler(hp, random_state)
 
+            # get synthetic sets
             synthetic_sets = make_sets_from_sampler(
                 sample_set=sampler, num_runs=number_of_data_points
             )
         except:
+            logger.warning(f"No data: {hp}")
             continue
 
         temp_hp = hp
@@ -217,10 +229,7 @@ if __name__ == "__main__":
     # read config file
     config = read_config_make_sets(config_path=config_path)
 
-    # add logger
-    logger = logging.getLogger(__name__)
-    logger.setLevel(level=logging.INFO)
-
+    # make hyperparameters
     make_hps_generator = make_hps_set(config=config)
     make_hps_generator, make_hps_generator_copy = itertools.tee(
         make_hps_generator
