@@ -1,6 +1,5 @@
 set_types:
   - numbers
-  - words
 n:
   - 10000
 m:
@@ -13,7 +12,8 @@ item_len:
   - 2
   - 3
   - 4
-  - null
+  - None
 overlap_fraction:
   - null
   - 0.5
+  - 1

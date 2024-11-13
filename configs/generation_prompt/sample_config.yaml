@@ -13,6 +13,7 @@ OP_LIST:
 # The types of sets to use in the experiment
 SET_TYPES:
   - "words"
+  - "deciles"
 
 # The maximum N that we sample numbers/words from
 N:
@@ -30,12 +31,12 @@ ITEM_LEN:
   - 3
 
 OVERLAP_FRACTION:
-  - None
+  - 0.5
 
 DECILE_NUM:
   - None
-  - 2
-  - 4
+  # - 2
+  # - 4
 
 # Prompt configuration
  # The number of examples to use in the prompt

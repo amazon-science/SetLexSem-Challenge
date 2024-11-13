@@ -128,29 +128,28 @@ def make_hps_set(
 def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_type"]
 
-    if "numbers" in hp["set_type"]:
+    if hp["set_type"] == "numbers":
         sampler = BasicNumberSampler(
             n=hp["n"],
             m=hp["m"],
             item_len=hp.get("item_len"),
             random_state=random_state,
         )
-    elif "words" in set_type:
-        if hp["decile_group"] is None:
-            sampler = BasicWordSampler(
-                n=hp["n"],
-                m=hp["m"],
-                item_len=hp.get("item_len"),
-                random_state=random_state,
-            )
-        else:
-            sampler = DecileWordSampler(
-                n=hp["n"],
-                m=hp["m"],
-                item_len=hp.get("item_len"),
-                decile_num=hp.get("decile_group"),
-                random_state=random_state,
-            )
+    elif set_type == "words":
+        sampler = BasicWordSampler(
+            n=hp["n"],
+            m=hp["m"],
+            item_len=hp.get("item_len"),
+            random_state=random_state,
+        )
+    elif "deciles" in set_type:
+        sampler = DecileWordSampler(
+            n=hp["n"],
+            m=hp["m"],
+            item_len=hp.get("item_len"),
+            decile_num=hp.get("decile_group"),
+            random_state=random_state,
+        )
     elif set_type == "deceptive_words":
         sampler = DeceptiveWordSampler(
             n=hp["n"],
@@ -237,10 +236,10 @@ if __name__ == "__main__":
     n_configurations = len(list(make_hps_generator_copy))
     logger.info(f"Creating sets for {n_configurations} configurations...")
 
-    for hp in make_hps_generator:
+    for hp_set in make_hps_generator:
         random_state = random.Random(seed_value)
         try:
-            sampler = get_sampler(hp, random_state)
+            sampler = get_sampler(hp_set, random_state)
 
             synthetic_sets = make_sets_from_sampler(
                 sample_set=sampler, num_runs=number_of_data_points

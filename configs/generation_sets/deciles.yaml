@@ -8,9 +8,11 @@ m:
   - 8
   - 16
 item_len:
+  - 3
   - 5
 overlap_fraction:
   - null
+  - 0.5
 decile_group:
   - 1
   - 2

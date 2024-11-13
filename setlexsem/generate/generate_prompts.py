@@ -47,7 +47,10 @@ def get_parser():
         help="Save data to disk",
     )
     parser.add_argument(
-        "--overwrite", action="store_true", help="Overwrite data"
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="Overwrite data",
     )
     return parser
 
@@ -336,7 +339,7 @@ def main(config_file, save_data, overwrite):
 
     # go through hyperparameters and run the experiment
     counter_exp = 1
-    for hp in make_hps_generator:
+    for hp_set in make_hps_generator:
         make_hps_prompt_generator = make_hps_prompt(
             config={
                 "op_list": OP_LIST,
@@ -354,7 +357,7 @@ def main(config_file, save_data, overwrite):
 
             # Create Sampler()
             try:
-                sampler = get_sampler(hp, random_state)
+                sampler = get_sampler(hp_set, random_state)
             except Exception as e:
                 logger.error(f"------> Error: Skipping this experiment: {e}")
                 counter_exp += 1
@@ -385,7 +388,7 @@ def main(config_file, save_data, overwrite):
 
             # create path based on hp and hp_prompt
             folder_structure, filename = get_prompt_file_path(
-                hp, hp_prompt, RANDOM_SEED_VAL
+                hp_set, hp_prompt, RANDOM_SEED_VAL
             )
             path_to_prompts = os.path.join(
                 PATH_PROMPTS_ROOT, folder_structure, filename
@@ -393,9 +396,13 @@ def main(config_file, save_data, overwrite):
             if save_data:
                 os.makedirs(os.path.dirname(path_to_prompts), exist_ok=True)
                 # save prompts
-                if os.path.exists(path_to_prompts) and not overwrite:
-                    pd.DataFrame(prompt_and_ground_truth).to_csv(
-                        path_to_prompts, index=False
+                if not os.path.exists(path_to_prompts) or overwrite:
+                    pd.DataFrame(prompt_and_ground_truth).fillna(
+                        "None"
+                    ).to_csv(path_to_prompts, index=False)
+                else:
+                    logger.info(
+                        f"Prompt file already exists, skipping: {folder_structure}/{filename}"
                     )
 
     logger.info("Done!")
