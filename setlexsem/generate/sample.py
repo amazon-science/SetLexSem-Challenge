@@ -164,7 +164,10 @@ class Sampler:
 
 
 def make_sampler_name_from_hps(sampler_hps):
-    """Create a formatted string name for a sampler based on its hyperparameters."""
+    """
+    Create a formatted string name for a sampler based on its
+    hyperparameters.
+    """
     n = None if sampler_hps["item_len"] else sampler_hps["n"]
     components = [
         f"N-{n}",
@@ -231,6 +234,9 @@ class BasicWordSampler(Sampler):
         Custom word list to sample from.
     item_len : int, optional
         Length constraint for sampled words.
+    pos : str, optional
+        A WordNet part-of-speech tag. One of wn.ADJ (adjective), wn.ADJ_SAT
+        (satellite adjective), wn.ADV (adverb), wn.NOUN, or wn.VERB.
     random_state : Random, optional
         Random number generator.
     """
@@ -241,12 +247,35 @@ class BasicWordSampler(Sampler):
         m: int,
         words: Optional[Union[List[str], Set[str]]] = None,
         item_len=None,
+        pos: Optional[str] = None,
         random_state=None,
         **kwargs,
     ):
         super().__init__(n, m, item_len=item_len, random_state=random_state)
 
         words = ENGLISH_WORDS if not words else words
+
+        if pos:
+            wn_parts_of_speech = {
+                wn.ADJ,
+                wn.ADJ_SAT,
+                wn.ADV,
+                wn.NOUN,
+                wn.VERB,
+            }
+            if pos not in wn_parts_of_speech:
+                raise ValueError(
+                    f"'pos' must be one of {wn_parts_of_speech}, not '{pos}'."
+                )
+            LOGGER.debug(
+                f"Dictionary size before filtering by {pos} {len(words)}."
+            )
+            # Reduce dictionary to those lemmata with at least one synset
+            # having the given part of speech.
+            words = [word for word in words if len(wn.synsets(word, pos=pos))]
+            LOGGER.debug(
+                f"Dictionary size after filtering by {pos} {len(words)}."
+            )
 
         if self.item_len is None:
             if self.n > len(words):
