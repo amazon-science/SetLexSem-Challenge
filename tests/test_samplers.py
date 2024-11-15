@@ -4,6 +4,7 @@ import types
 import warnings
 
 import pytest
+from nltk.corpus import wordnet as wn
 from nltk.corpus.reader import Synset
 
 from setlexsem.generate.sample import (
@@ -230,6 +231,35 @@ def test_basic_word_sampler_user_provided_words():
     assert len(B) == 4
     assert all(len(a) == 1 for a in A)
     assert all(len(b) == 1 for b in B)
+
+
+@pytest.mark.parametrize(
+    "pos", [wn.ADJ, wn.ADJ_SAT, wn.ADV, wn.NOUN, wn.VERB]
+)
+def test_basic_word_sampler_part_of_speech(pos):
+    """
+    Verify that the sampled words have the requisite part of speech.
+    """
+    print("test_basic_word_sampler_part_of_speech", "pos", pos)
+    sampler = BasicWordSampler(n=1000, m=2, pos=pos)
+    A, B = sampler()
+
+    def verify_set(s):
+        s = list(s)
+        assert len(wn.synsets(s[0], pos=pos))
+        assert len(wn.synsets(s[1], pos=pos))
+
+    verify_set(A)
+    verify_set(B)
+
+
+@pytest.mark.parametrize("pos", ["WQEF", "ABCD", "ZZZ"])
+def test_basic_word_sampler_invalid_part_of_speech(pos):
+    """
+    Verify that an exception is raised in the part of speech is invalid.
+    """
+    with pytest.raises(ValueError):
+        BasicWordSampler(n=1000, m=2, pos=pos)
 
 
 def test_deceptive_word_sampler_mix_sets():
