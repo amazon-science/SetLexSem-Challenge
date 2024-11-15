@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from nltk.corpus import words
 
-from setlexsem.prepare.ngrams import (
+from setlexsem.prepare.percentiles import (
     get_counts_dict_from_google_books,
     make_percentiles,
 )
@@ -25,13 +25,13 @@ def get_parser():
         required=True,
         help=(
             "The k-th percentile to use (1 is percentile, 10 is decile, etc.)"
-        )
+        ),
     )
     parser.add_argument(
         "--google-ngrams-path",
         type=str,
         required=True,
-        help="Path to Google Books Ngram file (e.g. frequencies.txt)"
+        help="Path to Google Books Ngram file (e.g. frequencies.txt)",
     )
     parser.add_argument(
         "--output-path",
