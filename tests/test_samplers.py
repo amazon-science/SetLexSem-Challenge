@@ -240,11 +240,9 @@ def test_deceptive_word_sampler_mix_sets():
     B = {4, 5, 6, 7}
     # Randomize the test.
     subset_size = random.randint(1, len(A))
-    # Call mix_sets via the class to avoid constructing an instance of
-    # DeceptiveWordSampler, as it takes a long time to initialize.
-    A2, B2 = DeceptiveWordSampler.mix_sets(
-        None, A, B, subset_size=subset_size
-    )
+    # Call DeceptiveWordSampler (it has to be initlized)
+    sampler = DeceptiveWordSampler(n=int(10e5), m=4)
+    A2, B2 = sampler.mix_sets(A=A, B=B, subset_size=subset_size)
     assert len(A2) == len(A)
     assert len(A.intersection(A2)) == len(A) - subset_size
     assert len(B2) == len(B)

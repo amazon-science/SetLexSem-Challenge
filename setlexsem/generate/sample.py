@@ -153,11 +153,22 @@ class Sampler:
             Dictionary containing sampler parameters.
         """
         return {
-            "class": self.__class__.__name__,
             "n": self.n,
             "m": self.m,
             "item_len": self.item_len,
+            "set_type": self.get_members_type(),
+            "decile_group": self.get_decile_group(),
+            "overlap_fraction": self.get_overlap_fraction(),
         }
+
+    def get_decile_group(self):
+        return None
+
+    def get_subset_size(self):
+        return None
+
+    def get_overlap_fraction(self):
+        return None
 
     def get_members_type(self):
         return None
@@ -456,6 +467,9 @@ class OverlapSampler(Sampler):
         name_pre = self.sampler.make_filename()
         return f"{name_pre}_O-{self.overlap_n}"
 
+    def get_overlap_fraction(self):
+        return self.overlap_fraction
+
 
 def get_clean_hyponyms(
     random_state,
@@ -717,6 +731,8 @@ class DeceptiveWordSampler(Sampler):
                 f"Subset to mix ({subset_size}) is bigger than "
                 f"either A ({len(A)}) or B ({len(B)})"
             )
+        self.subset_size = subset_size
+
         A, B = list(A), list(B)
         a = A[-subset_size:]
         b = B[-subset_size:]
@@ -733,7 +749,31 @@ class DeceptiveWordSampler(Sampler):
         str
             Type of members ("deceptive_words").
         """
-        return f"deceptive_words_{self.swap_set_elements}"
+        return "deceptive_words"
+
+    def get_subset_size(self):
+        return self.subset_size
+
+    def make_filename(self):
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string including decile information.
+        """
+        if self.item_len:
+            n = None
+        else:
+            n = self.n
+
+        name_pre = f"N-{n}_M-{self.m}_L-{self.item_len}"
+
+        if self.swap_set_elements:
+            return f"{name_pre}_DeceptiveWords_Swapped-{self.subset_size}"
+        else:
+            return f"{name_pre}_DeceptiveWords"
 
 
 class DecileWordSampler(BasicWordSampler):
@@ -806,7 +846,6 @@ class DecileWordSampler(BasicWordSampler):
         str
             Filename string including decile information.
         """
-        """Create a string for the parameters of the generated data"""
         if self.item_len:
             n = None
         else:
@@ -820,6 +859,9 @@ class DecileWordSampler(BasicWordSampler):
             f"{self.__class__.__name__} "
             f"({self.n=}, {self.m=}, {self.item_len=}, {self.decile_num=})"
         )
+
+    def get_decile_group(self):
+        return self.decile_num
 
 
 def normalize_lemma_name(lemma_name):

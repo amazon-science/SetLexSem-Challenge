@@ -1,5 +1,5 @@
 set_types:
-  - deceptive_words
+  - words
 n:
   - 10000
 m:
@@ -8,10 +8,12 @@ m:
   - 8
   - 16
 item_len:
-  - null
+  - 1
+  - 2
+  - 3
+  - 4
+  - None
 overlap_fraction:
   - null
   - 0.5
-swap_status:
-  - False
-  - True
+  - 1

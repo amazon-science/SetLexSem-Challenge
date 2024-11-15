@@ -24,6 +24,9 @@ from setlexsem.generate.sample import Sampler
 from setlexsem.generate.utils_io import load_generated_data
 from setlexsem.utils import get_prompt_file_path, read_config
 
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+
 
 def replace_none(list_in):
     return [None if x == "None" else x for x in list_in]
@@ -44,7 +47,10 @@ def get_parser():
         help="Save data to disk",
     )
     parser.add_argument(
-        "--overwrite", action="store_true", help="Overwrite data"
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="Overwrite data",
     )
     return parser
 
@@ -116,23 +122,31 @@ def create_prompts_from_sampler(
     results = 0
     prompt_and_ground_truth = []
     for i in tqdm(range(num_runs)):
-        # create two sets from the sampler
-        if isinstance(sampler, Iterable):
-            # get next set from generator
-            A, B = next(sampler)
-            A = ast.literal_eval(A)
-            B = ast.literal_eval(B)
-        else:
-            # generate next set
-            A, B = sampler()
+        try:
+            # create two sets from the sampler
+            if isinstance(sampler, Iterable):
+                # get next set from generator
+                A, B = next(sampler)
+                A = ast.literal_eval(A)
+                B = ast.literal_eval(B)
+            else:
+                # generate next set
+                A, B = sampler()
+        except:
+            logger.warning(f"No set: {sampler}")
+            continue
 
-        # Assign operation to the prompt_config
-        prompt = get_prompt(
-            A,
-            B,
-            prompt_config_ready,
-            add_roles=add_roles,
-        )
+        try:
+            # Assign operation to the prompt_config
+            prompt = get_prompt(
+                A,
+                B,
+                prompt_config_ready,
+                add_roles=add_roles,
+            )
+        except:
+            logger.warning(f"No prompt: {prompt_config}")
+            continue
 
         ground_truth = get_ground_truth(prompt_config_ready.operation, A, B)
 
@@ -185,7 +199,7 @@ def create_prompts(
 
     # generator for prompts
     if prompt_config:
-        make_hps_generator = make_hps_prompt(config=prompt_config)
+        make_hps_prompt_generator = make_hps_prompt(config=prompt_config)
     else:
         make_hps_prompt_generator = make_hps_prompt(
             config={
@@ -211,15 +225,19 @@ def create_prompts(
     output = {}
     for hp in make_hps_generator:
         # generator for prompts
-        make_hps_prompt_generator = make_hps_prompt(
-            config={
-                "op_list": op_list,
-                "k_shot": k_shot,
-                "prompt_type": prompt_type,
-                "prompt_approach": prompt_approach,
-                "is_fix_shot": is_fix_shot,
-            }
-        )
+        if prompt_config:
+            make_hps_prompt_generator = make_hps_prompt(config=prompt_config)
+        else:
+            make_hps_prompt_generator = make_hps_prompt(
+                config={
+                    "op_list": op_list,
+                    "k_shot": k_shot,
+                    "prompt_type": prompt_type,
+                    "prompt_approach": prompt_approach,
+                    "is_fix_shot": is_fix_shot,
+                }
+            )
+
         for hp_prompt in make_hps_prompt_generator:
             # Initilize Seed for each combination
             random_state = random.Random(random_seed_value)
@@ -228,9 +246,7 @@ def create_prompts(
             try:
                 sampler = get_sampler(hp, random_state)
             except Exception as e:
-                print(
-                    f"------> Error: Cannot create sampler. Skipping this experiment: {e}"
-                )
+                logger.warning(f"No sampler: {hp} | {e}")
                 counter_exp += 1
                 continue
 
@@ -247,9 +263,7 @@ def create_prompts(
                     add_roles=add_roles,  # Claude Instant
                 )
             except Exception as e:
-                print(
-                    f"------> Error: Cannot create prompt. Skipping this experiment: {e}"
-                )
+                logger.warning(f"No prompt from sampler: {hp_prompt} | {e}")
                 counter_exp += 1
                 continue
 
@@ -260,9 +274,6 @@ def create_prompts(
 
 
 def main(config_file, save_data, overwrite):
-    logger = logging.getLogger(__name__)
-    logger.setLevel(level=logging.INFO)
-
     # TODO: Add this to Config
     SWAP_STATUS = False
     add_roles = False
@@ -328,7 +339,7 @@ def main(config_file, save_data, overwrite):
 
     # go through hyperparameters and run the experiment
     counter_exp = 1
-    for hp in make_hps_generator:
+    for hp_set in make_hps_generator:
         make_hps_prompt_generator = make_hps_prompt(
             config={
                 "op_list": OP_LIST,
@@ -339,16 +350,14 @@ def main(config_file, save_data, overwrite):
             }
         )
         for hp_prompt in make_hps_prompt_generator:
-            logger.info(
-                f"-------- EXPERIMENT #{counter_exp} out of {n_experiments}"
-            )
+            logger.info(f"--- Prompt #{counter_exp} out of {n_experiments}")
 
             # Initilize Seed for each combination
             random_state = random.Random(RANDOM_SEED_VAL)
 
             # Create Sampler()
             try:
-                sampler = get_sampler(hp, random_state)
+                sampler = get_sampler(hp_set, random_state)
             except Exception as e:
                 logger.error(f"------> Error: Skipping this experiment: {e}")
                 counter_exp += 1
@@ -379,7 +388,7 @@ def main(config_file, save_data, overwrite):
 
             # create path based on hp and hp_prompt
             folder_structure, filename = get_prompt_file_path(
-                hp, hp_prompt, RANDOM_SEED_VAL
+                hp_set, hp_prompt, RANDOM_SEED_VAL
             )
             path_to_prompts = os.path.join(
                 PATH_PROMPTS_ROOT, folder_structure, filename
@@ -387,9 +396,13 @@ def main(config_file, save_data, overwrite):
             if save_data:
                 os.makedirs(os.path.dirname(path_to_prompts), exist_ok=True)
                 # save prompts
-                if os.path.exists(path_to_prompts) and not overwrite:
-                    pd.DataFrame(prompt_and_ground_truth).to_csv(
-                        path_to_prompts, index=False
+                if not os.path.exists(path_to_prompts) or overwrite:
+                    pd.DataFrame(prompt_and_ground_truth).fillna(
+                        "None"
+                    ).to_csv(path_to_prompts, index=False)
+                else:
+                    logger.info(
+                        f"Prompt file already exists, skipping: {folder_structure}/{filename}"
                     )
 
     logger.info("Done!")

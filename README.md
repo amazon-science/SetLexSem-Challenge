@@ -4,12 +4,23 @@ This research repository maintains the code and the results for the research pap
 
 _"Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set."_ -[Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/set-theory/)
 
-# Install Package from PyPI and Use
+# TL;DR Install Package from PyPI and Use
 To install the package, please run:
 ```pip install setlexsem```
 You can generate the dataset by:
 ```python
 from setlexsem.generate.generate_sets import make_sets
+
+data_config = {
+    "set_types": ["words"],
+    "n": [1000],
+    "m": [2, 4, 8, 16],
+    "item_len": [1, 2, 3],
+    "decile_group": [5],
+    "swap_status": None,
+    "overlap_fraction": [0.5],
+}
+
 make_sets(
     set_types=["numbers"],
     n=[10],
@@ -39,31 +50,39 @@ out_data = make_sets(
 ```
 You can generate the prompts by:
 ```python
-from setlexsem.generate.generate_prompts import generate_prompts
+from setlexsem.generate.generate_prompts import create_prompts
 
-generate_prompts(
+data_config = {
+    "set_types": ["words"],
+    "n": [1000],
+    "m": [2, 16],
+    "item_len": [2],
+    "decile_group": [5],
+    "swap_status": None,
+    "overlap_fraction": [0.5],
+}
+
+prompt_config = {
+    "op_list": ["union", "intersection"],
+    "k_shot": [0, 1, 3],
+    "prompt_type": ["formal_language"],
+    "prompt_approach": ["baseline", "chain_of_thought"],
+    "is_fix_shot": [True]
+}
+
+prompt_and_ground_truth = create_prompts(
     # data config
-    set_types=["numbers"],
-    n=[10],
-    m=[1,2],
-    item_len=[1,3],
-    decile_group=None,
-    swap_status=None,
-    overlap_fraction=[None],
-    number_of_data_points= 5,
+    data_config=data_config,
+    number_of_data_points=5,
     random_seed_value=292,
     # prompt config
-    op_list=["union", "intersection"],
-    k_shot=[0, 1, 3],
-    prompt_type=["formal_language"],
-    prompt_approach=["baseline", "chain_of_thought"],
-    is_fix_shot=[True],
+    prompt_config=prompt_config,
     add_roles=False)
 ```
 
 
 
-# Install
+# Development
 
 When installing, it's important to upgrade to the most recent pip. This ensures that `setup.py` runs correctly. An outdated version of pip can fail to run the `InstallNltkWordnetAfterPackages` command class in setup.py and cause subsequent errors.
 
@@ -113,7 +132,9 @@ the installation instructions for this package.
 To make the CSV file containing sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/numbers_and_words.yaml" --seed-value 292 --save-data
+python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/numbers.yaml" --seed-value 292 --save-data
+
+python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/words.yaml" --seed-value 292 --save-data
 ```
 
 ### Sample sets based on training-set frequency
@@ -157,12 +178,11 @@ python setlexsem/generate/generate_sets.py --config-path "configs/generation_set
 
 Once you've sampled the sets, create the prompts. The prompts are written as CSV files in the `prompts` directory.
 
-### Example: Sets with numbers
-
+### Example: Prompts based on the config file
 To make the CSV file containing prompts sets of words and numbers, run:
 
 ```bash
-python setlexsem/generate/generate_prompts.py --config-path "configs/generation_prompt/test_config.yaml" --save-data
+python setlexsem/generate/generate_prompts.py --config-path "configs/generation_prompt/sample_config.yaml" --save-data
 ```
 
 ## Run the evalution
