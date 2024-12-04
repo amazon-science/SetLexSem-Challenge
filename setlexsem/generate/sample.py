@@ -65,8 +65,10 @@ class Sampler:
     ----------
     n : int
         Total number of items to sample from.
-    m : int
-        Number of items to include in each sampled set.
+    m_A : int
+        Number of items to include in sampled set A.
+    m_B : int
+        Number of items to include in sampled set B.
     item_len : int, optional
         Length constraint for sampled items.
     random_state : Random, optional
@@ -78,13 +80,20 @@ class Sampler:
         If m is greater than n.
     """
 
-    def __init__(self, n: int, m: int, item_len=None, random_state=None):
-        if m > n:
+    def __init__(
+        self, n: int, m_A: int, m_B: int, item_len=None, random_state=None
+    ):
+        if m_A > n:
             raise ValueError(
-                f"m ({m}) should be greater than n ({n}) but {m} <= {n}"
+                f"m ({m_A}) should be greater than n ({n}) but {m_A} <= {n}"
+            )
+        if m_B > n:
+            raise ValueError(
+                f"m ({m_B}) should be greater than n ({n}) but {m_B} <= {n}"
             )
         self.n = n
-        self.m = m
+        self.m_A = m_A
+        self.m_B = m_B
         self.item_len = item_len
         if random_state is None:
             self.random_state = random.Random()
@@ -113,7 +122,7 @@ class Sampler:
         """
         return (
             f"{self.__class__.__name__} "
-            f"({self.n=}, {self.m=}, {self.item_len=})"
+            f"({self.n=}, {self.m_A=}, {self.m_B=}, {self.item_len=})"
         )
 
     def make_filename(self):
@@ -130,7 +139,7 @@ class Sampler:
         else:
             n = self.n
 
-        return f"N-{n}_M-{self.m}_L-{self.item_len}"
+        return f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
     def create_sampler_for_k_shot(self):
         """
@@ -154,7 +163,8 @@ class Sampler:
         """
         return {
             "n": self.n,
-            "m": self.m,
+            "m_A": self.m_A,
+            "m_B": self.m_B,
             "item_len": self.item_len,
             "set_type": self.get_members_type(),
             "decile_group": self.get_decile_group(),
@@ -182,7 +192,8 @@ def make_sampler_name_from_hps(sampler_hps):
     n = None if sampler_hps["item_len"] else sampler_hps["n"]
     components = [
         f"N-{n}",
-        f"M-{sampler_hps['m']}",
+        f"MA-{sampler_hps['m_A']}",
+        f"MB-{sampler_hps['m_B']}",
         f"L-{sampler_hps['item_len']}",
     ]
 
@@ -239,8 +250,10 @@ class BasicWordSampler(Sampler):
     ----------
     n : int
         Total number of words to sample from.
-    m : int
-        Number of words to include in each sampled set.
+    m_A : int
+        Number of words to include in sampled set A.
+    m_B : int
+        Number of words to include in sampled set B.
     words : list or set of str, optional
         Custom word list to sample from.
     item_len : int, optional
@@ -255,14 +268,17 @@ class BasicWordSampler(Sampler):
     def __init__(
         self,
         n: int,
-        m: int,
+        m_A: int,
+        m_B: int,
         words: Optional[Union[List[str], Set[str]]] = None,
         item_len=None,
         pos: Optional[str] = None,
         random_state=None,
         **kwargs,
     ):
-        super().__init__(n, m, item_len=item_len, random_state=random_state)
+        super().__init__(
+            n, m_A, m_B, item_len=item_len, random_state=random_state
+        )
 
         words = ENGLISH_WORDS if not words else words
 
@@ -312,8 +328,8 @@ class BasicWordSampler(Sampler):
         tuple of set
             Two sets of sampled words.
         """
-        A = set(self.random_state.sample(self.possible_options, self.m))
-        B = set(self.random_state.sample(self.possible_options, self.m))
+        A = set(self.random_state.sample(self.possible_options, self.m_A))
+        B = set(self.random_state.sample(self.possible_options, self.m_B))
         return A, B
 
     def get_members_type(self):
@@ -345,9 +361,17 @@ class BasicNumberSampler(Sampler):
     """
 
     def __init__(
-        self, n: int, m: int, item_len=None, random_state=None, **kwargs
+        self,
+        n: int,
+        m_A: int,
+        m_B: int,
+        item_len=None,
+        random_state=None,
+        **kwargs,
     ):
-        super().__init__(n, m, item_len=item_len, random_state=random_state)
+        super().__init__(
+            n, m_A, m_B, item_len=item_len, random_state=random_state
+        )
         self.init_range_filter()
 
     def init_range_filter(self):
@@ -371,8 +395,8 @@ class BasicNumberSampler(Sampler):
         tuple of set
             Two sets of sampled numbers.
         """
-        A = set(self.random_state.sample(self.possible_options, self.m))
-        B = set(self.random_state.sample(self.possible_options, self.m))
+        A = set(self.random_state.sample(self.possible_options, self.m_A))
+        B = set(self.random_state.sample(self.possible_options, self.m_B))
         return A, B
 
     def get_members_type(self):
@@ -397,6 +421,8 @@ class OverlapSampler(Sampler):
         Base sampler to use for initial sampling.
     overlap_fraction : float, optional
         Fraction of overlap between sets.
+        overlap_fraction % of the elements in the smaller set
+        must also be in the larger set.
     overlap_n : int, optional
         Number of overlapping items.
     """
@@ -409,20 +435,27 @@ class OverlapSampler(Sampler):
     ):
         super().__init__(
             sampler.n,
-            sampler.m,
+            sampler.m_A,
+            sampler.m_B,
             item_len=sampler.item_len,
             random_state=sampler.random_state,
         )
         self.sampler = sampler
         self.overlap_fraction = overlap_fraction
 
-        A_init, _ = self.sampler()
-        m = len(A_init)
+        A_init, B_init = self.sampler()
+
+        m_small, m_large = (
+            (self.m_A, self.m_B)
+            if self.m_A < self.m_B
+            else (self.m_B, self.m_A)
+        )
+
         if self.overlap_fraction is not None:
             assert (
                 self.overlap_fraction <= 1 and self.overlap_fraction >= 0
             ), f"overlap fraction ({self.overlap_fraction}) has to be 0<X<1"
-            self.overlap_n = int(m * self.overlap_fraction)
+            self.overlap_n = int(m_small * self.overlap_fraction)
 
             if self.overlap_n == 0:
                 LOGGER.warning(
@@ -431,7 +464,14 @@ class OverlapSampler(Sampler):
         else:
             self.overlap_n = overlap_n
 
-        self.nonoverlap_n = m - self.overlap_n
+        self.nonoverlap_n = max(
+            0,
+            (
+                m_large - self.overlap_n
+                if self.m_A <= self.m_B
+                else m_large - self.overlap_n - self.m_B
+            ),
+        )
 
     def __call__(self):
         """
@@ -450,7 +490,7 @@ class OverlapSampler(Sampler):
         A, B = self.sampler()
 
         counter = 0
-        while len(A.intersection(B)) != self.overlap_n or len(A) != len(B):
+        while len(A.intersection(B)) != self.overlap_n or len(B) != self.m_B:
             A, B1 = self.sampler()
             A2, B2 = self.sampler()
 
@@ -601,8 +641,10 @@ class DeceptiveWordSampler(Sampler):
     ----------
     n : int
         Total number of words to sample from (not used directly).
-    m : int
-        Number of words to include in each sampled set.
+    m_A : int
+        Number of words to include in sampled set A.
+    m_B : int
+        Number of words to include in sampled set B.
     item_len : int, optional
         Length constraint for sampled words (not supported).
     random_state : Random, optional
@@ -625,7 +667,8 @@ class DeceptiveWordSampler(Sampler):
     def __init__(
         self,
         n: int,
-        m: int,
+        m_A: int,
+        m_B: int,
         item_len=None,
         random_state=None,
         with_replacement=False,
@@ -634,13 +677,15 @@ class DeceptiveWordSampler(Sampler):
         random_state_mix_sets=None,
         **kwargs,
     ):
-        super().__init__(n, m, item_len=item_len, random_state=random_state)
+        super().__init__(
+            n, m_A, m_B, item_len=item_len, random_state=random_state
+        )
         if self.item_len is not None:
             warnings.warn(
                 "DeceptiveWordSampler does not support `item_len` argument",
                 category=UserWarning,
             )
-        if self.m > 30:
+        if self.m_A > 30 or self.m_B > 30:
             raise ValueError(
                 "DeceptiveWordSampler won't sample sets larger than 30"
             )
@@ -653,7 +698,8 @@ class DeceptiveWordSampler(Sampler):
             os.path.join(PATH_DATA_ROOT, "hyponyms.json")
         )
         # self.postprocess_hyponym_sets(hyperhypo)
-        f = partial(by_length, min_length=self.m)
+        max_set_size = max(self.m_A, self.m_B)
+        f = partial(by_length, min_length=max_set_size)
         # filtered hyponyms
         self.possible_options = list(filter(f, self.clean_hyponyms))
 
@@ -674,8 +720,8 @@ class DeceptiveWordSampler(Sampler):
             possible_options = list(self.possible_options)
         else:
             possible_options = self.possible_options
-        A = self.choose_hyponyms(possible_options)
-        B = self.choose_hyponyms(possible_options)
+        A = self.choose_hyponyms(possible_options, self.m_A)
+        B = self.choose_hyponyms(possible_options, self.m_B)
         if self.swap_set_elements:
             A, B = self.mix_sets(A, B, subset_size=self.swap_n)
         return A, B
@@ -699,7 +745,7 @@ class DeceptiveWordSampler(Sampler):
         return hyponyms
 
     def choose_hyponyms(
-        self, hyponyms, with_replacement=False, normalize=True
+        self, hyponyms, set_size, with_replacement=False, normalize=True
     ):
         """
         Choose a set of hyponyms and return a random subset.
@@ -722,7 +768,7 @@ class DeceptiveWordSampler(Sampler):
         if not with_replacement:
             hyponyms.remove(hyponym_list)
         self.random_state.shuffle(hyponym_list)
-        prepared = hyponym_list[: self.m]
+        prepared = hyponym_list[:set_size]
         prepared = set(prepared)
         return prepared
 
@@ -753,9 +799,12 @@ class DeceptiveWordSampler(Sampler):
         ValueError
             If subset_size is larger than either set.
         """
+        smaller_set_size = min((len(A), len(B)))
         if not subset_size:
-            subset_size = self.random_state_mix_sets.randint(1, self.m)
-        if subset_size > min((len(A), len(B))):
+            subset_size = self.random_state_mix_sets.randint(
+                1, smaller_set_size
+            )
+        if subset_size > smaller_set_size:
             raise ValueError(
                 f"Subset to mix ({subset_size}) is bigger than "
                 f"either A ({len(A)}) or B ({len(B)})"
@@ -797,7 +846,7 @@ class DeceptiveWordSampler(Sampler):
         else:
             n = self.n
 
-        name_pre = f"N-{n}_M-{self.m}_L-{self.item_len}"
+        name_pre = f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
         if self.swap_set_elements:
             return f"{name_pre}_DeceptiveWords_Swapped-{self.subset_size}"
@@ -826,7 +875,8 @@ class DecileWordSampler(BasicWordSampler):
     def __init__(
         self,
         n: int,
-        m: int,
+        m_A: int,
+        m_B: int,
         decile_num: int,
         item_len=None,
         random_state=None,
@@ -836,7 +886,8 @@ class DecileWordSampler(BasicWordSampler):
         self.deciles = self.load_deciles()[str(self.decile_num)]
         super().__init__(
             n,
-            m,
+            m_A,
+            m_B,
             words=self.deciles,
             item_len=item_len,
             random_state=random_state,
@@ -880,13 +931,13 @@ class DecileWordSampler(BasicWordSampler):
         else:
             n = self.n
 
-        name_pre = f"N-{n}_M-{self.m}_L-{self.item_len}"
+        name_pre = f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
         return f"{name_pre}_Decile-{self.decile_num}"
 
     def __str__(self):
         return (
             f"{self.__class__.__name__} "
-            f"({self.n=}, {self.m=}, {self.item_len=}, {self.decile_num=})"
+            f"({self.n=}, {self.m_A=}, {self.m_B=}, {self.item_len=}, {self.decile_num=})"
         )
 
     def get_decile_group(self):

@@ -16,8 +16,13 @@ def n():
 
 
 @pytest.fixture
-def m():
-    return 3
+def m_A():
+    return 2
+
+
+@pytest.fixture
+def m_B():
+    return 4
 
 
 @pytest.fixture
@@ -54,11 +59,11 @@ def assert_results_are_ok(results, ops, errors):
         raise e
 
 
-def test_zero_shot_with_formal_language(n, m, num_runs):
+def test_zero_shot_with_formal_language(n, m_A, m_B, num_runs):
     """
     Zero-shot prompt with formal language
     """
-    number_sampler = BasicNumberSampler(n=n, m=m)
+    number_sampler = BasicNumberSampler(n=n, m_A=m_A, m_B=m_B)
     k_shot = 0
     results = {}
     for op in OPS:
@@ -81,11 +86,11 @@ def test_zero_shot_with_formal_language(n, m, num_runs):
     assert_results_are_ok(results, OPS, errors)
 
 
-def test_one_shot_with_formal_language(n, m, num_runs):
+def test_one_shot_with_formal_language(n, m_A, m_B, num_runs):
     """
     One-shot prompt using formal language
     """
-    number_sampler = BasicNumberSampler(n=n, m=m)
+    number_sampler = BasicNumberSampler(n=n, m_A=m_A, m_B=m_B)
     k_shot = 1
     results = {}
     for op in OPS:
@@ -108,11 +113,11 @@ def test_one_shot_with_formal_language(n, m, num_runs):
     assert_results_are_ok(results, OPS, errors)
 
 
-def test_five_shot_with_formal_language(n, m, num_runs):
+def test_five_shot_with_formal_language(n, m_A, m_B, num_runs):
     """
     Five-shot prompting using formal language
     """
-    number_sampler = BasicNumberSampler(n=n, m=m)
+    number_sampler = BasicNumberSampler(n=n, m_A=m_A, m_B=m_B)
 
     k_shot = 5
     results = {}

@@ -43,8 +43,8 @@ def get_study_paths(
         study_name (str): Name of the study.
         path_root (str): Root path for storing study results.
     """
-    assert type(sampler_hp) is tuple, "sampler_hp has to be a tuple"
-    assert type(prompt_hp) is tuple, "prompt_hp has to be a tuple"
+    assert type(sampler_hp) is dict, "sampler_hp has to be a tuple"
+    assert type(prompt_hp) is dict, "prompt_hp has to be a tuple"
 
     # get experiment_folder_structure
     experiment_folder_structure, filename_experiment = get_prompt_file_path(
@@ -264,7 +264,8 @@ def read_config(
 
     SET_TYPES: List[str] = config["SET_TYPES"]
     N: List[int] = config["N"]
-    M: List[int] = config["M"]
+    MA: List[int] = config["MA"]
+    MB: List[int] = config["MB"]
     ITEM_LEN: List[int] = config["ITEM_LEN"]
     OVERLAP_FRACTION: List[int] = config["OVERLAP_FRACTION"]
     DECILE_NUM: List[int] = config["DECILE_NUM"]
@@ -283,7 +284,8 @@ def read_config(
         "MODEL_NAME": MODEL_NAME,
         "SET_TYPES": SET_TYPES,
         "N": N,
-        "M": M,
+        "MA": MA,
+        "MB": MB,
         "ITEM_LEN": ITEM_LEN,
         "OVERLAP_FRACTION": OVERLAP_FRACTION,
         "DECILE_NUM": DECILE_NUM,

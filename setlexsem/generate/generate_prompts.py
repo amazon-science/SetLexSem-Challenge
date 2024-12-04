@@ -75,15 +75,17 @@ def make_hps_prompt(
     param_grid = {
         "op_list": op_list if isinstance(op_list, list) else [op_list],
         "k_shot": k_shot if isinstance(k_shot, list) else [k_shot],
-        "prompt_type": prompt_type
-        if isinstance(prompt_type, list)
-        else [prompt_type],
-        "prompt_approach": prompt_approach
-        if isinstance(prompt_approach, list)
-        else [prompt_approach],
-        "is_fix_shot": is_fix_shot
-        if isinstance(is_fix_shot, list)
-        else [is_fix_shot],
+        "prompt_type": (
+            prompt_type if isinstance(prompt_type, list) else [prompt_type]
+        ),
+        "prompt_approach": (
+            prompt_approach
+            if isinstance(prompt_approach, list)
+            else [prompt_approach]
+        ),
+        "is_fix_shot": (
+            is_fix_shot if isinstance(is_fix_shot, list) else [is_fix_shot]
+        ),
     }
 
     # Generate combinations of all parameters as dictionaries
@@ -164,7 +166,8 @@ def create_prompts_from_sampler(
 def create_prompts(
     set_types=None,
     n=None,
-    m=None,
+    m_A=None,
+    m_B=None,
     item_len=None,
     decile_group=None,
     swap_status=None,
@@ -189,7 +192,8 @@ def create_prompts(
             config={
                 "set_types": set_types,
                 "n": n,
-                "m": m,
+                "m_A": m_A,
+                "m_B": m_B,
                 "item_len": item_len,
                 "decile_group": decile_group,
                 "swap_status": swap_status,
@@ -290,7 +294,8 @@ def main(config_file, save_data, overwrite):
     # Sampler/Sets Config
     SET_TYPES = config["SET_TYPES"]
     N = replace_none(config["N"])
-    M = replace_none(config["M"])
+    M_A = replace_none(config["M_A"])
+    M_B = replace_none(config["M_B"])
     ITEM_LEN = replace_none(config["ITEM_LEN"])
     OVERLAP_FRACTION = replace_none(config["OVERLAP_FRACTION"])
     DECILE_NUM = replace_none(config["DECILE_NUM"])
@@ -320,7 +325,8 @@ def main(config_file, save_data, overwrite):
         config={
             "set_types": SET_TYPES,
             "n": N,
-            "m": M,
+            "m_A": M_A,
+            "m_B": M_B,
             "item_len": ITEM_LEN,
             "decile_group": DECILE_NUM,
             "swap_status": SWAP_STATUS,

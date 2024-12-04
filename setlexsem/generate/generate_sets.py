@@ -66,7 +66,6 @@ def make_sets_from_sampler(
             )
         except:
             continue
-
     return set_list
 
 
@@ -87,7 +86,8 @@ def read_config_make_sets(config_path: str = "config.yaml"):
 def make_hps_set(
     set_types=None,
     n=None,
-    m=None,
+    m_A=None,
+    m_B=None,
     item_len=None,
     decile_group=None,
     swap_status=None,
@@ -97,7 +97,8 @@ def make_hps_set(
     if config:
         set_types = config["set_types"]
         n = config.get("n")
-        m = config.get("m")
+        m_A = config.get("m_A")
+        m_B = config.get("m_B")
         item_len = config.get("item_len")
         decile_group = config.get("decile_group")
         swap_status = config.get("swap_status")
@@ -107,17 +108,20 @@ def make_hps_set(
     param_grid = {
         "set_type": set_types if isinstance(set_types, list) else [set_types],
         "n": n if isinstance(n, list) else [n],
-        "m": m if isinstance(m, list) else [m],
+        "m_A": m_A if isinstance(m_A, list) else [m_A],
+        "m_B": m_B if isinstance(m_B, list) else [m_B],
         "item_len": item_len if isinstance(item_len, list) else [item_len],
-        "decile_group": decile_group
-        if isinstance(decile_group, list)
-        else [decile_group],
-        "swap_status": swap_status
-        if isinstance(swap_status, list)
-        else [swap_status],
-        "overlap_fraction": overlap_fraction
-        if isinstance(overlap_fraction, list)
-        else [overlap_fraction],
+        "decile_group": (
+            decile_group if isinstance(decile_group, list) else [decile_group]
+        ),
+        "swap_status": (
+            swap_status if isinstance(swap_status, list) else [swap_status]
+        ),
+        "overlap_fraction": (
+            overlap_fraction
+            if isinstance(overlap_fraction, list)
+            else [overlap_fraction]
+        ),
     }
 
     # Generate combinations of all parameters as dictionaries
@@ -131,21 +135,24 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     if hp["set_type"] == "numbers":
         sampler = BasicNumberSampler(
             n=hp["n"],
-            m=hp["m"],
+            m_A=hp["m_A"],
+            m_B=hp["m_B"],
             item_len=hp.get("item_len"),
             random_state=random_state,
         )
     elif set_type == "words":
         sampler = BasicWordSampler(
             n=hp["n"],
-            m=hp["m"],
+            m_A=hp["m_A"],
+            m_B=hp["m_B"],
             item_len=hp.get("item_len"),
             random_state=random_state,
         )
     elif "deciles" in set_type:
         sampler = DecileWordSampler(
             n=hp["n"],
-            m=hp["m"],
+            m_A=hp["m_A"],
+            m_B=hp["m_B"],
             item_len=hp.get("item_len"),
             decile_num=hp.get("decile_group"),
             random_state=random_state,
@@ -153,10 +160,11 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     elif set_type == "deceptive_words":
         sampler = DeceptiveWordSampler(
             n=hp["n"],
-            m=hp["m"],
+            m_A=hp["m_A"],
+            m_B=hp["m_B"],
             random_state=random_state,
             swap_set_elements=hp.get("swap_status"),
-            swap_n=hp["m"] // 2,
+            swap_n=hp["m_A"] // 2,  # TODO: Change this to be a parameter
         )
 
     # create overlapping sets
@@ -164,14 +172,14 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
         sampler = OverlapSampler(
             sampler, overlap_fraction=hp.get("overlap_fraction")
         )
-
     return sampler
 
 
 def make_sets(
     set_types=None,
     n=None,
-    m=None,
+    m_A=None,
+    m_B=None,
     item_len=None,
     decile_group=None,
     swap_status=None,
@@ -181,16 +189,24 @@ def make_sets(
     seed_value: int = 292,
 ) -> Tuple[Dict[Any, Any], Sampler]:
     if config:
-        set_types = config["set_types"]
+        set_types = config["set_type"]
         n = config.get("n")
-        m = config.get("m")
+        m_A = config.get("m_A")
+        m_B = config.get("m_B")
         item_len = config.get("item_len")
         decile_group = config.get("decile_group")
         swap_status = config.get("swap_status")
         overlap_fraction = config.get("overlap_fraction")
 
     make_hps_generator = make_hps_set(
-        set_types, n, m, item_len, decile_group, swap_status, overlap_fraction
+        set_types,
+        n,
+        m_A,
+        m_B,
+        item_len,
+        decile_group,
+        swap_status,
+        overlap_fraction,
     )
     all_sets = []
     for hp in make_hps_generator:
