@@ -231,48 +231,48 @@ def make_sets(
     return all_sets
 
 
-# if __name__ == "__main__":
-#     # parse args
-#     parser = get_parser()
-#     args = parser.parse_args()
-#     config_path = args.config_path
-#     save_data = args.save_data
-#     number_of_data_points = args.number_of_data_points
-#     seed_value = args.seed_value
-#     overwrite = args.overwrite
+if __name__ == "__main__":
+    # parse args
+    parser = get_parser()
+    args = parser.parse_args()
+    config_path = args.config_path
+    save_data = args.save_data
+    number_of_data_points = args.number_of_data_points
+    seed_value = args.seed_value
+    overwrite = args.overwrite
 
-#     # read config file
-#     config = read_config_make_sets(config_path=config_path)
+    # read config file
+    config = read_config_make_sets(config_path=config_path)
 
-#     # make hyperparameters
-#     make_hps_generator = make_hps_set(config=config)
-#     make_hps_generator, make_hps_generator_copy = itertools.tee(
-#         make_hps_generator
-#     )
-#     n_configurations = len(list(make_hps_generator_copy))
-#     logger.info(f"Creating sets for {n_configurations} configurations...")
+    # make hyperparameters
+    make_hps_generator = make_hps_set(config=config)
+    make_hps_generator, make_hps_generator_copy = itertools.tee(
+        make_hps_generator
+    )
+    n_configurations = len(list(make_hps_generator_copy))
+    logger.info(f"Creating sets for {n_configurations} configurations...")
 
-#     for hp_set in make_hps_generator:
-#         random_state = random.Random(seed_value)
-#         try:
-#             sampler = get_sampler(hp_set, random_state)
+    for hp_set in make_hps_generator:
+        random_state = random.Random(seed_value)
+        try:
+            sampler = get_sampler(hp_set, random_state)
 
-#             synthetic_sets = make_sets_from_sampler(
-#                 sample_set=sampler, num_runs=number_of_data_points
-#             )
+            synthetic_sets = make_sets_from_sampler(
+                sample_set=sampler, num_runs=number_of_data_points
+            )
 
-#             logger.info(f"Generated {sampler}")
-#             if save_data:
-#                 save_generated_sets(
-#                     synthetic_sets,
-#                     sampler,
-#                     seed_value,
-#                     number_of_data_points,
-#                     overwrite=overwrite,
-#                 )
+            logger.info(f"Generated {sampler}")
+            if save_data:
+                save_generated_sets(
+                    synthetic_sets,
+                    sampler,
+                    seed_value,
+                    number_of_data_points,
+                    overwrite=overwrite,
+                )
 
-#         except Exception as e:
-#             logger.warning(f"Skipping: {e} / {sampler}")
-#             continue
+        except Exception as e:
+            logger.warning(f"Skipping: {e} / {sampler}")
+            continue
 
-#     logger.info("Dataset is created!")
+    logger.info("Dataset is created!")
