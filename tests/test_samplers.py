@@ -60,7 +60,6 @@ def test_overlap_number_sampler(
         )
     elif object_type == "words":
         sampler = BasicWordSampler(
-            n=1000,
             m_A=m_A,
             m_B=m_B,
             item_len=item_len,
@@ -252,7 +251,6 @@ def test_basic_word_sampler_part_of_speech(pos):
     """
     Verify that the sampled words have the requisite part of speech.
     """
-    print("test_basic_word_sampler_part_of_speech", "pos", pos)
     sampler = BasicWordSampler(n=1000, m_A=2, m_B=2, pos=pos)
     A, B = sampler()
 
