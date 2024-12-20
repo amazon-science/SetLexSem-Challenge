@@ -125,7 +125,6 @@ OP_INSTRUCTION_PLAIN_LANGUAGE = {
         'Print each pair of elements (a, b) where "a" is from A and "b" '
         "is from B as a Python list of tuples, all on one line."
     ),
-    "membership": "Print True or False if item A is a present in the set B.",
 }
 
 OP_INSTRUCTION_PYTHONIC_CONCISENESS = {
@@ -409,10 +408,10 @@ def get_prompt(A, B, prompt_config, add_roles=False):
     else:
         prompt = ""
 
-        # define the inputs and instruction
-        prompt += (
-            f"You are given two sets. Set A is ({A_str}). Set B is ({B_str})."
-        )
+    # define the inputs and instruction
+    prompt += (
+        f"You are given two sets. Set A is ({A_str}). Set B is ({B_str})."
+    )
     prompt += " You are given the following task:\n"
     prompt += f"<task> {prompt_config.get_instruction()} </task>"
     # add k-shot examples

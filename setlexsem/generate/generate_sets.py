@@ -187,7 +187,6 @@ def make_sets(
     config: Dict[str, Any] = {},
     number_of_data_points: int = 100,
     seed_value: int = 292,
-    random_state=None,
 ) -> Tuple[Dict[Any, Any], Sampler]:
     if config:
         set_types = config["set_type"]
@@ -211,7 +210,7 @@ def make_sets(
     )
     all_sets = []
     for hp in make_hps_generator:
-        # random_state = random.Random(seed_value)
+        random_state = random.Random(seed_value)
 
         try:
             sampler = get_sampler(hp, random_state)
