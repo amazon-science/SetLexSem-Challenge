@@ -57,14 +57,35 @@ warnings.filterwarnings(
 )
 
 
+def make_sampler_name_from_hps(sampler_hps):
+    """
+    Create a formatted string name for a sampler based on its
+    hyperparameters.
+    """
+    components = [
+        f"MA-{sampler_hps['m_A']}",
+        f"MB-{sampler_hps['m_B']}",
+        f"L-{sampler_hps['item_len']}",
+    ]
+    if "n" in sampler_hps:
+        n = None if sampler_hps["item_len"] else sampler_hps["n"]
+        components.insert(0, f"N-{n}")
+
+    if sampler_hps.get("overlap_fraction") is not None:
+        components.append(f"O-{sampler_hps['overlap_fraction']}")
+
+    if sampler_hps.get("decile_num") is not None:
+        components.append(f"Decile-{sampler_hps['decile_num']}")
+
+    return "_".join(components)
+
+
 class Sampler:
     """
     Base class for samplers.
 
     Parameters
     ----------
-    n : int
-        Total number of items to sample from.
     m_A : int
         Number of items to include in sampled set A.
     m_B : int
@@ -80,18 +101,7 @@ class Sampler:
         If m is greater than n.
     """
 
-    def __init__(
-        self, n: int, m_A: int, m_B: int, item_len=None, random_state=None
-    ):
-        if m_A > n:
-            raise ValueError(
-                f"m ({m_A}) should be greater than n ({n}) but {m_A} <= {n}"
-            )
-        if m_B > n:
-            raise ValueError(
-                f"m ({m_B}) should be greater than n ({n}) but {m_B} <= {n}"
-            )
-        self.n = n
+    def __init__(self, m_A: int, m_B: int, item_len=None, random_state=None):
         self.m_A = m_A
         self.m_B = m_B
         self.item_len = item_len
@@ -122,7 +132,7 @@ class Sampler:
         """
         return (
             f"{self.__class__.__name__} "
-            f"({self.n=}, {self.m_A=}, {self.m_B=}, {self.item_len=})"
+            f"({self.m_A=}, {self.m_B=}, {self.item_len=})"
         )
 
     def make_filename(self):
@@ -134,12 +144,8 @@ class Sampler:
         str
             Filename string.
         """
-        if self.item_len:
-            n = None
-        else:
-            n = self.n
 
-        return f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
+        return f"MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
     def create_sampler_for_k_shot(self):
         """
@@ -162,7 +168,6 @@ class Sampler:
             Dictionary containing sampler parameters.
         """
         return {
-            "n": self.n,
             "m_A": self.m_A,
             "m_B": self.m_B,
             "item_len": self.item_len,
@@ -182,28 +187,6 @@ class Sampler:
 
     def get_members_type(self):
         return None
-
-
-def make_sampler_name_from_hps(sampler_hps):
-    """
-    Create a formatted string name for a sampler based on its
-    hyperparameters.
-    """
-    n = None if sampler_hps["item_len"] else sampler_hps["n"]
-    components = [
-        f"N-{n}",
-        f"MA-{sampler_hps['m_A']}",
-        f"MB-{sampler_hps['m_B']}",
-        f"L-{sampler_hps['item_len']}",
-    ]
-
-    if sampler_hps.get("overlap_fraction") is not None:
-        components.append(f"O-{sampler_hps['overlap_fraction']}")
-
-    if sampler_hps.get("decile_num") is not None:
-        components.append(f"Decile-{sampler_hps['decile_num']}")
-
-    return "_".join(components)
 
 
 def filter_words(words, item_len):
@@ -248,8 +231,6 @@ class BasicWordSampler(Sampler):
 
     Parameters
     ----------
-    n : int
-        Total number of words to sample from.
     m_A : int
         Number of words to include in sampled set A.
     m_B : int
@@ -267,7 +248,6 @@ class BasicWordSampler(Sampler):
 
     def __init__(
         self,
-        n: int,
         m_A: int,
         m_B: int,
         words: Optional[Union[List[str], Set[str]]] = None,
@@ -277,7 +257,7 @@ class BasicWordSampler(Sampler):
         **kwargs,
     ):
         super().__init__(
-            n, m_A, m_B, item_len=item_len, random_state=random_state
+            m_A, m_B, item_len=item_len, random_state=random_state
         )
 
         words = ENGLISH_WORDS if not words else words
@@ -305,19 +285,10 @@ class BasicWordSampler(Sampler):
             )
 
         if self.item_len is None:
-            if self.n > len(words):
-                # need to make the number of items smaller to enable sampling
-                self.n = len(words)
-            self.possible_options = self.random_state.sample(words, self.n)
+            self.possible_options = words
         else:
             assert self.item_len >= 1, "item_len should be greater than 0"
-            filtered_english_words = filter_words(words, self.item_len)
-            if self.n > len(filtered_english_words):
-                # need to make the number of items smaller to enable sampling
-                self.n = len(filtered_english_words)
-            self.possible_options = self.random_state.sample(
-                filtered_english_words, self.n
-            )
+            self.possible_options = filter_words(words, self.item_len)
 
     def __call__(self):
         """
@@ -328,6 +299,7 @@ class BasicWordSampler(Sampler):
         tuple of set
             Two sets of sampled words.
         """
+
         A = set(self.random_state.sample(self.possible_options, self.m_A))
         B = set(self.random_state.sample(self.possible_options, self.m_B))
         return A, B
@@ -370,8 +342,17 @@ class BasicNumberSampler(Sampler):
         **kwargs,
     ):
         super().__init__(
-            n, m_A, m_B, item_len=item_len, random_state=random_state
+            m_A, m_B, item_len=item_len, random_state=random_state
         )
+        self.n = n
+        if m_A > n:
+            raise ValueError(
+                f"m ({m_A}) should be greater than n ({n}) but {m_A} <= {n}"
+            )
+        if m_B > n:
+            raise ValueError(
+                f"m ({m_B}) should be greater than n ({n}) but {m_B} <= {n}"
+            )
         self.init_range_filter()
 
     def init_range_filter(self):
@@ -410,6 +391,33 @@ class BasicNumberSampler(Sampler):
         """
         return "numbers"
 
+    def make_filename(self):
+        """
+        Create a string for the parameters of the generated data.
+
+        Returns
+        -------
+        str
+            Filename string.
+        """
+        if self.item_len:
+            n = None
+        else:
+            n = self.n
+
+        return f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
+
+    def to_dict(self):
+        """
+        Convert sampler parameters to a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing sampler parameters.
+        """
+        return super().to_dict().update({"n": self.n})
+
 
 class OverlapSampler(Sampler):
     """
@@ -433,8 +441,8 @@ class OverlapSampler(Sampler):
         overlap_fraction: int = None,
         overlap_n: int = None,
     ):
+
         super().__init__(
-            sampler.n,
             sampler.m_A,
             sampler.m_B,
             item_len=sampler.item_len,
@@ -639,8 +647,6 @@ class DeceptiveWordSampler(Sampler):
 
     Parameters
     ----------
-    n : int
-        Total number of words to sample from (not used directly).
     m_A : int
         Number of words to include in sampled set A.
     m_B : int
@@ -666,7 +672,6 @@ class DeceptiveWordSampler(Sampler):
 
     def __init__(
         self,
-        n: int,
         m_A: int,
         m_B: int,
         item_len=None,
@@ -678,7 +683,7 @@ class DeceptiveWordSampler(Sampler):
         **kwargs,
     ):
         super().__init__(
-            n, m_A, m_B, item_len=item_len, random_state=random_state
+            m_A, m_B, item_len=item_len, random_state=random_state
         )
         if self.item_len is not None:
             warnings.warn(
@@ -841,12 +846,8 @@ class DeceptiveWordSampler(Sampler):
         str
             Filename string including decile information.
         """
-        if self.item_len:
-            n = None
-        else:
-            n = self.n
 
-        name_pre = f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
+        name_pre = f"MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
         if self.swap_set_elements:
             return f"{name_pre}_DeceptiveWords_Swapped-{self.subset_size}"
@@ -860,8 +861,6 @@ class DecileWordSampler(BasicWordSampler):
 
     Parameters
     ----------
-    n : int
-        Total number of words to sample from.
     m : int
         Number of words to include in each sampled set.
     decile_num : int
@@ -874,7 +873,6 @@ class DecileWordSampler(BasicWordSampler):
 
     def __init__(
         self,
-        n: int,
         m_A: int,
         m_B: int,
         decile_num: int,
@@ -885,7 +883,6 @@ class DecileWordSampler(BasicWordSampler):
         self.decile_num = decile_num
         self.deciles = self.load_deciles()[str(self.decile_num)]
         super().__init__(
-            n,
             m_A,
             m_B,
             words=self.deciles,
@@ -926,18 +923,13 @@ class DecileWordSampler(BasicWordSampler):
         str
             Filename string including decile information.
         """
-        if self.item_len:
-            n = None
-        else:
-            n = self.n
-
-        name_pre = f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
+        name_pre = f"MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
         return f"{name_pre}_Decile-{self.decile_num}"
 
     def __str__(self):
         return (
             f"{self.__class__.__name__} "
-            f"({self.n=}, {self.m_A=}, {self.m_B=}, {self.item_len=}, {self.decile_num=})"
+            f"({self.m_A=}, {self.m_B=}, {self.item_len=}, {self.decile_num=})"
         )
 
     def get_decile_group(self):
