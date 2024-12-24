@@ -133,7 +133,7 @@ def test_smoke_basic_word_sampler():
     """
     Smoke test of BasicWordSampler.
     """
-    sampler = BasicWordSampler(n=10, m_A=4, m_B=2)
+    sampler = BasicWordSampler(m_A=4, m_B=2)
     A, B = sampler()
     assert len(A) == 4
     assert len(B) == 2
@@ -154,7 +154,7 @@ def test_smoke_deceptive_word_sampler():
     Smoke test of DeceptiveWordSampler.
     """
     # n doesn't apply to this sampler.
-    sampler = DeceptiveWordSampler(n=int(10e5), m_A=2, m_B=4)
+    sampler = DeceptiveWordSampler(m_A=2, m_B=4)
     A, B = sampler()
     assert len(A) == 2
     assert len(B) == 4
@@ -164,7 +164,7 @@ def test_basic_word_sampler_item_len():
     """
     Verify that words are of the specified length when item_len is provided.
     """
-    sampler = BasicWordSampler(n=10, m_A=4, m_B=4, item_len=5)
+    sampler = BasicWordSampler(m_A=4, m_B=4, item_len=5)
     A, B = sampler()
     assert all(len(word) == 5 for word in A)
     assert all(len(word) == 5 for word in B)
@@ -187,13 +187,9 @@ def test_basic_word_sampler_random_state():
     """
     Verify that behavior is the same when the same random state is provided.
     """
-    sampler1 = BasicWordSampler(
-        n=10, m_A=4, m_B=4, random_state=random.Random(17)
-    )
+    sampler1 = BasicWordSampler(m_A=4, m_B=4, random_state=random.Random(17))
     A1, B1 = sampler1()
-    sampler2 = BasicWordSampler(
-        n=10, m_A=4, m_B=4, random_state=random.Random(17)
-    )
+    sampler2 = BasicWordSampler(m_A=4, m_B=4, random_state=random.Random(17))
     A2, B2 = sampler2()
     assert A1 == A2
     assert B1 == B2
@@ -220,11 +216,11 @@ def test_deceptive_word_sampler_random_state():
     Verify that behavior is the same when the same random state is provided.
     """
     sampler1 = DeceptiveWordSampler(
-        n=int(10e5), m_A=4, m_B=4, random_state=random.Random(17)
+        m_A=4, m_B=4, random_state=random.Random(17)
     )
     A1, B1 = sampler1()
     sampler2 = DeceptiveWordSampler(
-        n=int(10e5), m_A=4, m_B=4, random_state=random.Random(17)
+        m_A=4, m_B=4, random_state=random.Random(17)
     )
     A2, B2 = sampler2()
     assert A1 == A2
@@ -236,7 +232,7 @@ def test_basic_word_sampler_user_provided_words():
     Verify that words are sampled from the user-provided words.
     """
     words = list(set(string.ascii_letters))
-    sampler = BasicWordSampler(n=10, m_A=4, m_B=4, words=words)
+    sampler = BasicWordSampler(m_A=4, m_B=4, words=words)
     A, B = sampler()
     assert len(A) == 4
     assert len(B) == 4
@@ -251,7 +247,7 @@ def test_basic_word_sampler_part_of_speech(pos):
     """
     Verify that the sampled words have the requisite part of speech.
     """
-    sampler = BasicWordSampler(n=1000, m_A=2, m_B=2, pos=pos)
+    sampler = BasicWordSampler(m_A=2, m_B=2, pos=pos)
     A, B = sampler()
 
     def verify_set(s):
@@ -269,7 +265,7 @@ def test_basic_word_sampler_invalid_part_of_speech(pos):
     Verify that an exception is raised in the part of speech is invalid.
     """
     with pytest.raises(ValueError):
-        BasicWordSampler(n=1000, m_A=2, m_B=2, pos=pos)
+        BasicWordSampler(m_A=2, m_B=2, pos=pos)
 
 
 def test_deceptive_word_sampler_mix_sets():
@@ -281,7 +277,7 @@ def test_deceptive_word_sampler_mix_sets():
     # Randomize the test.
     subset_size = random.randint(1, len(A))
     # Call DeceptiveWordSampler (it has to be initlized)
-    sampler = DeceptiveWordSampler(n=int(10e5), m_A=len(A), m_B=len(B))
+    sampler = DeceptiveWordSampler(m_A=len(A), m_B=len(B))
     A2, B2 = sampler.mix_sets(A=A, B=B, subset_size=subset_size)
     assert len(A2) == len(A)
     assert len(A.intersection(A2)) == len(A) - subset_size

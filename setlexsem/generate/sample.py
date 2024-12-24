@@ -254,7 +254,6 @@ class BasicWordSampler(Sampler):
         item_len=None,
         pos: Optional[str] = None,
         random_state=None,
-        **kwargs,
     ):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
@@ -339,7 +338,6 @@ class BasicNumberSampler(Sampler):
         m_B: int,
         item_len=None,
         random_state=None,
-        **kwargs,
     ):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
@@ -680,7 +678,6 @@ class DeceptiveWordSampler(Sampler):
         swap_set_elements=False,
         swap_n: int = None,
         random_state_mix_sets=None,
-        **kwargs,
     ):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
@@ -878,7 +875,6 @@ class DecileWordSampler(BasicWordSampler):
         decile_num: int,
         item_len=None,
         random_state=None,
-        **kwargs,
     ):
         self.decile_num = decile_num
         self.deciles = self.load_deciles()[str(self.decile_num)]
