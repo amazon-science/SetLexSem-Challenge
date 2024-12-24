@@ -137,10 +137,7 @@ def aws_auth(
 
 def count_tokens(text: str, model_owner: str, model_name=None):
     """Count the number of tokens in a text"""
-    if model_owner == "anthropic":
-        client = anthropic.Anthropic()
-        n_tokens = client.count_tokens(text)
-    elif model_owner in ["amazon", "mistral", "meta"]:
+    if model_owner in ["amazon", "anthropic", "meta", "mistral"]:
         # 1.3 is just a heuristic
         n_tokens = len(text.split()) * 1.3
     elif model_owner == "openai":
