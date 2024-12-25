@@ -105,6 +105,8 @@ class Sampler:
         self.m_A = m_A
         self.m_B = m_B
         self.item_len = item_len
+        if isinstance(self.item_len, str):
+            self.item_len = eval(self.item_len)
         if random_state is None:
             self.random_state = random.Random()
         else:
@@ -339,7 +341,6 @@ class BasicNumberSampler(Sampler):
         m_B: int,
         item_len=None,
         random_state=None,
-        **kwargs,
     ):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
