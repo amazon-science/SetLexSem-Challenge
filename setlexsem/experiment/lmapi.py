@@ -8,7 +8,6 @@ import re
 import subprocess
 import time
 
-import anthropic
 import boto3
 import tiktoken
 from openai import OpenAI
