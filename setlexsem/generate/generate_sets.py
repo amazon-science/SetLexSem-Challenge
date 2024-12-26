@@ -1,9 +1,10 @@
 import argparse
+import ast
 import itertools
 import logging
 import random
 from itertools import product
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import yaml
 
@@ -44,6 +45,72 @@ def get_parser():
     return parser
 
 
+def astype_set(raw_input):
+    if not isinstance(raw_input, set):
+        if type(raw_input) == str:
+            raw_input = raw_input.strip()
+            set_out = ast.literal_eval(raw_input)
+        else:
+            set_out = set(raw_input)
+
+        return set_out
+    else:
+        return set_out
+
+
+def parse_set_pair(raw_set_a: str, raw_set_b: str) -> Tuple[set, set]:
+    """Parse string representations of sets into Python sets"""
+    try:
+        set_a = astype_set(raw_set_a)
+        set_b = astype_set(raw_set_b)
+        return set_a, set_b
+    except (ValueError, SyntaxError) as e:
+        logger.error(f"Failed to parse sets: {e}")
+        raise
+
+
+def generate_set_pair(sampler: Union[Iterable, callable]) -> Tuple[set, set]:
+    """Generate a pair of sets from either an iterable or callable sampler.
+
+    This function is designed to provide a flexible interface for generating set pairs.
+
+    The function's flexibility allows users to provide their own custom sampling logic,
+    either as an iterable or a callable, making it adaptable to different use cases and
+    data sources.
+
+    Notes:
+        - If sampler is an Iterable, it should yield raw set pairs that will be parsed.
+        - If sampler is a callable, it should directly return a tuple of two sets.
+        - Any exceptions during generation are caught and logged as warnings.
+
+    Examples:
+        Using an iterable:
+        >>> def pair_generator():
+        ...     yield ([1, 2, 3], [3, 4, 5])
+        ...     yield ([2, 4, 6], [1, 3, 5])
+        >>> set_a, set_b = generate_set_pair(pair_generator())
+        >>> print(set_a, set_b)
+        {1, 2, 3} {3, 4, 5}
+
+        Using a callable [or, Sampler class]:
+        >>> import random
+        >>> def random_set_pair():
+        ...     return set(random.sample(range(10), 3)), set(random.sample(range(10), 3))
+        >>> set_a, set_b = generate_set_pair(random_set_pair)
+        >>> print(set_a, set_b)  # Output will vary due to randomness
+        {1, 4, 7} {2, 5, 9}
+    """
+    try:
+        if isinstance(sampler, Iterable):
+            raw_a, raw_b = next(sampler)
+            return parse_set_pair(raw_a, raw_b)
+        else:
+            return sampler()
+    except Exception as e:
+        logger.warning(f"Failed to generate set pair from sampler: {e}")
+        return None, None
+
+
 def make_sets_from_sampler(
     sample_set: Sampler,
     num_runs: int,
@@ -51,21 +118,29 @@ def make_sets_from_sampler(
     """Generate random sets from the sampler"""
 
     # initlize the dataset
+    empty_sample_count = 0
     set_list = []
     for i in range(num_runs):
-        try:
-            # create two sets from the sampler
-            A, B = sample_set()
-            # loop through operations (on the same random sets)
-            set_list.append(
-                {
-                    "experiment_run": i,
-                    "A": A,
-                    "B": B,
-                }
-            )
-        except:
+        # create two sets from the sampler
+        A, B = generate_set_pair(sample_set)
+        if A is None or B is None:
+            empty_sample_count += 1
             continue
+
+        # loop through operations (on the same random sets)
+        set_list.append(
+            {
+                "experiment_run": i,
+                "A": A,
+                "B": B,
+            }
+        )
+
+    if empty_sample_count >= 10:
+        logger.warning(
+            f"Sampled at least one empty set; {empty_sample_count} out of {num_runs} samples."
+        )
+
     return set_list
 
 
@@ -106,7 +181,9 @@ def make_hps_set(
 
     # Wrap each parameter in a list if it isn’t already, to enable Cartesian product
     param_grid = {
-        "set_type": set_types if isinstance(set_types, list) else [set_types],
+        "set_types": set_types
+        if isinstance(set_types, list)
+        else [set_types],
         "n": n if isinstance(n, list) else [n],
         "m_A": m_A if isinstance(m_A, list) else [m_A],
         "m_B": m_B if isinstance(m_B, list) else [m_B],
@@ -130,9 +207,9 @@ def make_hps_set(
 
 
 def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
-    set_type = hp["set_type"]
+    set_type = hp["set_types"]
 
-    if hp["set_type"] == "numbers":
+    if set_type == "numbers":
         sampler = BasicNumberSampler(
             n=hp["n"],
             m_A=hp["m_A"],
@@ -189,7 +266,7 @@ def make_sets(
     seed_value: int = 292,
 ) -> Tuple[Dict[Any, Any], Sampler]:
     if config:
-        set_types = config["set_type"]
+        set_types = config["set_types"]
         n = config.get("n")
         m_A = config.get("m_A")
         m_B = config.get("m_B")
@@ -209,24 +286,25 @@ def make_sets(
         overlap_fraction,
     )
     all_sets = []
-    for hp in make_hps_generator:
+    for hp_set in make_hps_generator:
         random_state = random.Random(seed_value)
 
         try:
-            sampler = get_sampler(hp, random_state)
+            sampler = get_sampler(hp_set, random_state)
 
             # get synthetic sets
             synthetic_sets = make_sets_from_sampler(
                 sample_set=sampler, num_runs=number_of_data_points
             )
         except:
-            logger.warning(f"No data: {hp}")
+            logger.warning(f"No data: {hp_set}")
             continue
 
-        temp_hp = hp
-        for ds in synthetic_sets:
-            temp_hp.update(ds)
-            all_sets.append(temp_hp)
+    # add hyperparameters and concatenate results
+    for ds in synthetic_sets:
+        temp_hp = hp_set.copy()
+        temp_hp.update(ds)
+        all_sets.append(temp_hp)
 
     return all_sets
 
