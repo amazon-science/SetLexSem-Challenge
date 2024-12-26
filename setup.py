@@ -12,7 +12,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "tqdm",
-        "httpx==0.27.2",
         "anthropic",
         "boto3",
         "nltk",
