@@ -106,7 +106,9 @@ def make_hps_set(
 
     # Wrap each parameter in a list if it isn’t already, to enable Cartesian product
     param_grid = {
-        "set_type": set_types if isinstance(set_types, list) else [set_types],
+        "set_types": set_types
+        if isinstance(set_types, list)
+        else [set_types],
         "n": n if isinstance(n, list) else [n],
         "m_A": m_A if isinstance(m_A, list) else [m_A],
         "m_B": m_B if isinstance(m_B, list) else [m_B],
@@ -130,9 +132,9 @@ def make_hps_set(
 
 
 def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
-    set_type = hp["set_type"]
+    set_type = hp["set_types"]
 
-    if hp["set_type"] == "numbers":
+    if set_type == "numbers":
         sampler = BasicNumberSampler(
             n=hp["n"],
             m_A=hp["m_A"],
@@ -189,7 +191,7 @@ def make_sets(
     seed_value: int = 292,
 ) -> Tuple[Dict[Any, Any], Sampler]:
     if config:
-        set_types = config["set_type"]
+        set_types = config["set_types"]
         n = config.get("n")
         m_A = config.get("m_A")
         m_B = config.get("m_B")

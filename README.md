@@ -1,30 +1,29 @@
-# Overview
+# SetLexSem Challenge
+
+## Overview
 
 This research repository maintains the code and the results for the research paper: SETLEXSEM CHALLENGE: Using Set Operations to Evaluate the Lexical and Semantic Robustness of Language Models.
 
 _"Set theory has become the standard foundation for mathematics, as every mathematical object can be viewed as a set."_ -[Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/set-theory/)
 
-# TL;DR Install Package from PyPI and Use
+## Using the package without pulling the repo
+
 To install the package, please run:
 ```pip install setlexsem```
-You can generate the dataset by:
+
+### Make Synthetic Sets
+
+You can generate the dataset by arguments or configs:
+
 ```python
 from setlexsem.generate.generate_sets import make_sets
 
-data_config = {
-    "set_types": ["words"],
-    "n": [1000],
-    "m": [2, 4, 8, 16],
-    "item_len": [1, 2, 3],
-    "decile_group": [5],
-    "swap_status": None,
-    "overlap_fraction": [0.5],
-}
-
-make_sets(
+# by arguments
+sets_by_args = make_sets(
     set_types=["numbers"],
     n=[10],
-    m=[1,2],
+    m_A=1,
+    m_B=2,
     item_len=[1],
     decile_group=None,
     swap_status=None,
@@ -32,39 +31,45 @@ make_sets(
     seed_value=292,
     number_of_data_points= 3
 )
-# --- or, this can be config based:
+
+# by configs
 config = {
     "set_types": ["numbers"],
     "n": [10],
-    "m": [10],
-    "item_len": [2],
+    "m_A": [1],
+    "m_B": [2],
+    "item_len": [1],
     "decile_group": None,
     "swap_status": None,
-    "overlap_fraction": [0.5],
+    "overlap_fraction": [None],
 }
-out_data = make_sets(
+sets_by_config = make_sets(
     config=config,
-    number_of_data_points= 5,
+    number_of_data_points=3,
     seed_value=292
 )
 ```
+
+### Generate Prompts
+
 You can generate the prompts by:
+
 ```python
 from setlexsem.generate.generate_prompts import create_prompts
 
 data_config = {
     "set_types": ["words"],
-    "n": [1000],
-    "m": [2, 16],
-    "item_len": [2],
-    "decile_group": [5],
+    "m_A": [4, 8],
+    "m_B": [4, 8],
+    "item_len": [None],
+    "decile_group": [3],
     "swap_status": None,
     "overlap_fraction": [0.5],
 }
 
 prompt_config = {
     "op_list": ["union", "intersection"],
-    "k_shot": [0, 1, 3],
+    "k_shot": [0, 1, 5],
     "prompt_type": ["formal_language"],
     "prompt_approach": ["baseline", "chain_of_thought"],
     "is_fix_shot": [True]
@@ -73,16 +78,14 @@ prompt_config = {
 prompt_and_ground_truth = create_prompts(
     # data config
     data_config=data_config,
-    number_of_data_points=5,
+    number_of_data_points=50,
     random_seed_value=292,
     # prompt config
     prompt_config=prompt_config,
     add_roles=False)
 ```
 
-
-
-# Development
+## Development
 
 When installing, it's important to upgrade to the most recent pip. This ensures that `setup.py` runs correctly. An outdated version of pip can fail to run the `InstallNltkWordnetAfterPackages` command class in setup.py and cause subsequent errors.
 
@@ -94,7 +97,9 @@ pip install -e .
 pip install -e ."[dev, test]"
 ```
 
-# NLTK words
+To run the tests smoothly, create a file in the root directory with the name of `secrets.txt` and write down your AWS Account Number there.
+
+### NLTK words
 
 If you get errors from `nltk` about package `words` not being installed while
 executing the code in this repository, run:
@@ -107,7 +112,7 @@ nltk.download("words")
 Note that `words` should be automatically installed by `pip` when you follow
 the installation instructions for this package.
 
-# Project layout
+## Project layout
 
 * `configs/`
   * `configs/experimetns` contains configuration files which specify hyperparamter settings for running experiments.
@@ -123,11 +128,11 @@ the installation instructions for this package.
   * `generate` contains code for generating data, sample synthetic sets, prompts and utils needed for data generation.
   * `prepare` contains helper functions for partitioning words according to their frequencies.
 
-# Generate the dataset
+## Generate datasets
 
-## Create the sets
+### Create the sets
 
-### Sample sets of numbers or words
+#### Sample sets of numbers or words
 
 To make the CSV file containing sets of words and numbers, run:
 
@@ -137,7 +142,7 @@ python setlexsem/generate/generate_sets.py --config-path "configs/generation_set
 python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/words.yaml" --seed-value 292 --save-data
 ```
 
-### Sample sets based on training-set frequency
+#### Sample sets based on training-set frequency
 
 To sample sets based on their training-set frequency, we use an approximation based on rank frequency in the Google Books Ngrams corpus.
 
@@ -161,7 +166,7 @@ training-set frequency, run:
 python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/deciles.yaml" --seed-value 292 --save-data
 ```
 
-### Sample "deceptive" sets
+#### Sample "deceptive" sets
 
 To sample semantically "deceptive" sets (see paper for details), create `hyponyms.json` by running the following command:
 
@@ -170,15 +175,17 @@ python scripts/make_hyponyms.py --output-path data/hyponyms.json
 ```
 
 To make the CSV file containing deceptive sets:
+
 ```bash
 python setlexsem/generate/generate_sets.py --config-path "configs/generation_sets/deceptive.yaml" --seed-value 292 --save-data
 ```
 
-## Create the prompts
+### Create the prompts
 
 Once you've sampled the sets, create the prompts. The prompts are written as CSV files in the `prompts` directory.
 
-### Example: Prompts based on the config file
+#### Example: Prompts based on the config file
+
 To make the CSV file containing prompts sets of words and numbers, run:
 
 ```bash
@@ -210,17 +217,21 @@ python scripts/analysis_for_one_study.py
 
 * Generate figures using notebooks/Hypothesis Testing - Manuscript.ipynb. Validate the filtering criterias in configs/post_hypothesis/hypothesis.json
 
-## Test
+## Tests
 
-To test the full-suite of tests, you need to provide the Account Number.
+To test the full-suite of tests, you need to provide the Account Number (if `secrets.txt` does not exist). You can add your account number using `-s` argument for pytest.
 
 ```bash
-pytest -s .
+pytest -v -s .
 ```
 
-You will be prompted to provide your Account Number after that.
+You will be prompted to provide your Account Number after that. If the account number is already there in the `secrets.txt`, run:
 
-### Coverage report
+```bash
+pytest -v .
+```
+
+## Coverage report
 
 ```bash
 pip install pytest-cov

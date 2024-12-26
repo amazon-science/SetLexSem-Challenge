@@ -1,5 +1,6 @@
 import pytest
 
+from setlexsem.constants import ACCOUNT_NUMBER
 from setlexsem.experiment.experiment import run_experiment
 from setlexsem.experiment.lmapi import LMClass
 from setlexsem.generate.prompt import (
@@ -31,6 +32,8 @@ def num_runs():
 
 
 def get_account_number():
+    if ACCOUNT_NUMBER is not None:
+        return ACCOUNT_NUMBER
     return input("Enter account number: ")
 
 
@@ -38,7 +41,8 @@ ACCOUNT_NUMBER = get_account_number()
 
 # define LMClass to test the functions
 LM = LMClass(
-    model_name="anthropic.claude-instant-v1", account_number=ACCOUNT_NUMBER
+    model_name="anthropic.claude-3-haiku-20240307-v1:0",
+    account_number=ACCOUNT_NUMBER,
 )
 
 
