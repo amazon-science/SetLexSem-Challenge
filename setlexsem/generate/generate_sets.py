@@ -46,12 +46,16 @@ def get_parser():
 
 
 def astype_set(raw_input):
-    if type(raw_input) == str:
-        raw_input = raw_input.strip()
-        set_out = ast.literal_eval(raw_input)
+    if not isinstance(raw_input, set):
+        if type(raw_input) == str:
+            raw_input = raw_input.strip()
+            set_out = ast.literal_eval(raw_input)
+        else:
+            set_out = set(raw_input)
+
+        return set_out
     else:
-        set_out = raw_input
-    return set_out
+        return set_out
 
 
 def parse_set_pair(raw_set_a: str, raw_set_b: str) -> Tuple[set, set]:
@@ -66,7 +70,36 @@ def parse_set_pair(raw_set_a: str, raw_set_b: str) -> Tuple[set, set]:
 
 
 def generate_set_pair(sampler: Union[Iterable, callable]) -> Tuple[set, set]:
-    """Generate a pair of sets from either an iterable or callable sampler"""
+    """Generate a pair of sets from either an iterable or callable sampler.
+
+    This function is designed to provide a flexible interface for generating set pairs.
+
+    The function's flexibility allows users to provide their own custom sampling logic,
+    either as an iterable or a callable, making it adaptable to different use cases and
+    data sources.
+
+    Notes:
+        - If sampler is an Iterable, it should yield raw set pairs that will be parsed.
+        - If sampler is a callable, it should directly return a tuple of two sets.
+        - Any exceptions during generation are caught and logged as warnings.
+
+    Examples:
+        Using an iterable:
+        >>> def pair_generator():
+        ...     yield ([1, 2, 3], [3, 4, 5])
+        ...     yield ([2, 4, 6], [1, 3, 5])
+        >>> set_a, set_b = generate_set_pair(pair_generator())
+        >>> print(set_a, set_b)
+        {1, 2, 3} {3, 4, 5}
+
+        Using a callable [or, Sampler class]:
+        >>> import random
+        >>> def random_set_pair():
+        ...     return set(random.sample(range(10), 3)), set(random.sample(range(10), 3))
+        >>> set_a, set_b = generate_set_pair(random_set_pair)
+        >>> print(set_a, set_b)  # Output will vary due to randomness
+        {1, 4, 7} {2, 5, 9}
+    """
     try:
         if isinstance(sampler, Iterable):
             raw_a, raw_b = next(sampler)
@@ -85,13 +118,13 @@ def make_sets_from_sampler(
     """Generate random sets from the sampler"""
 
     # initlize the dataset
-    empty_sampler_counter = 0
+    empty_sample_count = 0
     set_list = []
     for i in range(num_runs):
         # create two sets from the sampler
         A, B = generate_set_pair(sample_set)
         if A is None or B is None:
-            empty_sampler_counter += 1
+            empty_sample_count += 1
             continue
 
         # loop through operations (on the same random sets)
@@ -103,9 +136,9 @@ def make_sets_from_sampler(
             }
         )
 
-    if empty_sampler_counter >= 10:
+    if empty_sample_count >= 10:
         logger.warning(
-            f"Sampler is empty {empty_sampler_counter} times out of {num_runs}"
+            f"Sampled at least one empty set; {empty_sample_count} out of {num_runs} samples."
         )
 
     return set_list
