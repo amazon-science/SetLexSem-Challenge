@@ -66,21 +66,22 @@ def test_make_sets_from_sampler():
 def test_make_sets_generates_unique_sets():
     # Set up some sample hyperparameters
     hps = {
-        "set_types": ["numbers", "words"],
+        "set_types": ["numbers", "words", "decile_words"],
         "n": 1000,
-        "m_A": [2, 4],
-        "m_B": [2, 4],
+        "m_A": [2, 4, 8],
+        "m_B": [2, 4, 8],
+        "item_len": [None, 3, 5],
     }
 
     # Generate sets using make_sets
-    sets = make_sets(**hps, number_of_data_points=100, seed_value=42)
-
-    # Check that all sets are unique
-    set_tuples = [f"{(s['A'], s['B'])}" for s in sets]
-
-    assert len(set_tuples) == len(
-        set(set_tuples)
-    ), f"Found duplicates: {set_tuples}"
+    sets = make_sets(**hps, number_of_data_points=1000, seed_value=42)
+    pairs = set()
+    for d in sets:
+        a = tuple(sorted(d["A"]))
+        b = tuple(sorted(d["B"]))
+        pair = (a, b)
+        assert pair not in pairs, f"Duplicate pair found: A={a}, B={b}"
+        pairs.add(pair)
 
 
 # Test case 2: Ensure correct set lengths are generated
