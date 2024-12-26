@@ -12,7 +12,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "tqdm",
-        "anthropic",
         "boto3",
         "nltk",
         "tiktoken",
