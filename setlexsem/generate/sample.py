@@ -344,15 +344,21 @@ class BasicNumberSampler(Sampler):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
         )
-        self.n = n
-        if m_A > n:
-            raise ValueError(
-                f"m ({m_A}) should be greater than n ({n}) but {m_A} <= {n}"
-            )
-        if m_B > n:
-            raise ValueError(
-                f"m ({m_B}) should be greater than n ({n}) but {m_B} <= {n}"
-            )
+        if self.item_len:
+            self.n = None
+        else:
+            self.n = n
+
+        if self.n is not None:
+            if m_A > n:
+                raise ValueError(
+                    f"m ({m_A}) should be greater than n ({n}) but {m_A} <= {n}"
+                )
+            if m_B > n:
+                raise ValueError(
+                    f"m ({m_B}) should be greater than n ({n}) but {m_B} <= {n}"
+                )
+
         self.init_range_filter()
 
     def init_range_filter(self):
@@ -400,11 +406,6 @@ class BasicNumberSampler(Sampler):
         str
             Filename string.
         """
-        if self.item_len:
-            n = None
-        else:
-            n = self.n
-
         return f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
     def to_dict(self):
@@ -441,7 +442,6 @@ class OverlapSampler(Sampler):
         overlap_fraction: int = None,
         overlap_n: int = None,
     ):
-
         super().__init__(
             sampler.m_A,
             sampler.m_B,
