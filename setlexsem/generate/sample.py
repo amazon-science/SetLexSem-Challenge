@@ -344,10 +344,7 @@ class BasicNumberSampler(Sampler):
         super().__init__(
             m_A, m_B, item_len=item_len, random_state=random_state
         )
-        if self.item_len:
-            self.n = None
-        else:
-            self.n = n
+        self.n = None if self.item_len else n
 
         if self.n is not None:
             if m_A > n:

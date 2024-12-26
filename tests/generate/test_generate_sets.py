@@ -2,7 +2,6 @@ import ast
 from typing import Any, Dict, Iterable, List, Tuple, Union
 from unittest.mock import Mock
 
-import pandas as pd
 import pytest
 
 from setlexsem.generate.generate_sets import (
@@ -67,22 +66,21 @@ def test_make_sets_from_sampler():
 def test_make_sets_generates_unique_sets():
     # Set up some sample hyperparameters
     hps = {
-        "set_types": ["numbers"],
-        "n": 20,
-        "m_A": 5,
-        "m_B": 5,
+        "set_types": ["numbers", "words"],
+        "n": 1000,
+        "m_A": [2, 4],
+        "m_B": [2, 4],
     }
 
     # Generate sets using make_sets
-    sets = make_sets(**hps, number_of_data_points=10, seed_value=42)
+    sets = make_sets(**hps, number_of_data_points=100, seed_value=42)
 
     # Check that all sets are unique
-    n_duplicated_A = pd.DataFrame(sets)["A"].duplicated().sum()
-    n_duplicated_B = pd.DataFrame(sets)["B"].duplicated().sum()
+    set_tuples = [f"{(s['A'], s['B'])}" for s in sets]
 
-    assert (
-        n_duplicated_A == 0 | n_duplicated_B == 0
-    ), f"{n_duplicated_A} duplicates were found in set A & {n_duplicated_B} duplicates were found in set B"
+    assert len(set_tuples) == len(
+        set(set_tuples)
+    ), f"Found duplicates: {set_tuples}"
 
 
 # Test case 2: Ensure correct set lengths are generated
