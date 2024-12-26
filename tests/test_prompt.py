@@ -58,11 +58,11 @@ def test_smoke_sample_numbers(n, m_A, m_B, item_len, random_state):
         ), f"member {b} in B is not of length {item_len}"
 
 
-def test_smoke_sample_words(n, m_A, m_B, item_len, random_state):
+def test_smoke_sample_words(m_A, m_B, item_len, random_state):
     """Smoke test of sample_words."""
     # Test 1: Without Item Length
     word_sampler = BasicWordSampler(
-        n=n, m_A=m_A, m_B=m_B, random_state=random_state
+        m_A=m_A, m_B=m_B, random_state=random_state
     )
     A, B = word_sampler()
     assert A is not None
@@ -71,7 +71,7 @@ def test_smoke_sample_words(n, m_A, m_B, item_len, random_state):
     assert len(B) == m_B, "B should be of length m"
     # Test 2: With Item Length
     word_sampler = BasicWordSampler(
-        n=n, m_A=m_A, m_B=m_B, item_len=item_len, random_state=random_state
+        m_A=m_A, m_B=m_B, item_len=item_len, random_state=random_state
     )
     A, B = word_sampler()
     for a in A:
