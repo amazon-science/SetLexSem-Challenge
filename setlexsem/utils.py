@@ -264,7 +264,7 @@ def read_config(
 
     SET_TYPES: List[str] = config["SET_TYPES"]
     N: List[int] = config["N"]
-    if "M" in config.keys():
+    if "M" in config.keys():  # backward compatibility
         MA: List[int] = config["M"]
         MB: List[int] = config["M"]
     else:

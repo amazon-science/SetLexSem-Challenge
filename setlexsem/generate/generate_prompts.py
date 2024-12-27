@@ -294,7 +294,7 @@ def main(config_file, save_data, overwrite):
     # Sampler/Sets Config
     SET_TYPES = config["SET_TYPES"]
     N = replace_none(config["N"])
-    if "M" in config.keys():
+    if "M" in config.keys():  # backward compatibility
         M_A = replace_none(config["M"])
         M_B = replace_none(config["M"])
     else:

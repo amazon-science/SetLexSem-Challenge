@@ -137,7 +137,7 @@ def make_sets_from_sampler(
             }
         )
 
-    if empty_sample_count > 0:
+    if empty_sample_count:
         logger.warning(
             f"Did not sample for `{empty_sample_count} out of {num_runs} cases` because set hyperparameter conditions could not be met."
         )
@@ -211,7 +211,7 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_types"]
     if set_type == "numbers":
         sampler = BasicNumberSampler(
-            n=hp["n"] if hp.get("n") else None,
+            n=hp.get("n"),
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             item_len=hp.get("item_len"),
