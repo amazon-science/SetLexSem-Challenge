@@ -6,6 +6,7 @@ import pytest
 
 from setlexsem.generate.generate_sets import (
     generate_set_pair,
+    make_sets,
     make_sets_from_sampler,
     parse_set_pair,
 )
@@ -59,3 +60,65 @@ def test_make_sets_from_sampler():
     # Test with non-positive number of runs
     result = make_sets_from_sampler(mock_sampler, num_runs=0)
     assert result == []
+
+
+# Test case 1: Ensure unique sets are generated
+def test_make_sets_generates_unique_sets():
+    # Set up some sample hyperparameters
+    hps = {
+        "set_types": ["numbers", "words", "decile_words"],
+        "n": 1000,
+        "m_A": [2, 4, 8],
+        "m_B": [2, 4, 8],
+        "item_len": [None, 3, 5],
+    }
+
+    # Generate sets using make_sets
+    sets = make_sets(**hps, number_of_data_points=1000, seed_value=42)
+    pairs = set()
+    for d in sets:
+        a = tuple(sorted(d["A"]))
+        b = tuple(sorted(d["B"]))
+        pair = (a, b)
+        assert pair not in pairs, f"Duplicate pair found: A={a}, B={b}"
+        pairs.add(pair)
+
+
+# Test case 2: Ensure correct set lengths are generated
+def test_make_sets_set_lengths():
+    # Set up some sample hyperparameters
+    hps = {
+        "set_types": ["words"],
+        "n": 1000,
+        "m_A": 5,
+        "m_B": 7,
+    }
+
+    # Generate sets using make_sets
+    sets = make_sets(**hps, number_of_data_points=20, seed_value=42)
+
+    # Check that all sets have correct lengths
+    for s in sets:
+        assert len(s["A"]) == hps["m_A"]
+        assert len(s["B"]) == hps["m_B"]
+
+
+# Test case 3: Ensure overlap fraction is correctly applied
+def test_make_sets_overlap_fraction():
+    # Set up some sample hyperparameters
+    hps = {
+        "set_types": ["numbers"],
+        "n": 1000,
+        "m_A": 2,
+        "m_B": 2,
+        "overlap_fraction": 0.5,
+    }
+
+    # Generate sets using make_sets
+    sets = make_sets(**hps, number_of_data_points=10, seed_value=42)
+
+    # Check that overlap fraction is correctly applied
+    for s in sets:
+        overlap = len(s["A"].intersection(s["B"]))
+        expected_overlap = int(hps["overlap_fraction"] * hps["m_A"])
+        assert overlap == expected_overlap

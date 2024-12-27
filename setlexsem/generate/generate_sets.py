@@ -210,8 +210,14 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_types"]
 
     if set_type == "numbers":
+        # override n if item-length is defined
+        if hp.get("item_len"):
+            n = None
+        else:
+            n = hp["n"]
+
         sampler = BasicNumberSampler(
-            n=hp["n"],
+            n=n,
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             item_len=hp.get("item_len"),
@@ -219,7 +225,6 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
         )
     elif set_type == "words":
         sampler = BasicWordSampler(
-            n=hp["n"],
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             item_len=hp.get("item_len"),
@@ -227,7 +232,6 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
         )
     elif "deciles" in set_type:
         sampler = DecileWordSampler(
-            n=hp["n"],
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             item_len=hp.get("item_len"),
@@ -236,7 +240,6 @@ def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
         )
     elif set_type == "deceptive_words":
         sampler = DeceptiveWordSampler(
-            n=hp["n"],
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             random_state=random_state,
@@ -297,14 +300,16 @@ def make_sets(
                 sample_set=sampler, num_runs=number_of_data_points
             )
         except:
-            logger.warning(f"No data: {hp_set}")
+            logger.warning(
+                f"No data for: {hp_set} - Make sure hyperparameters can be used to generate a set."
+            )
             continue
 
-    # add hyperparameters and concatenate results
-    for ds in synthetic_sets:
-        temp_hp = hp_set.copy()
-        temp_hp.update(ds)
-        all_sets.append(temp_hp)
+        # add hyperparameters and concatenate results
+        for ds in synthetic_sets:
+            temp_hp = hp_set.copy()
+            temp_hp.update(ds)
+            all_sets.append(temp_hp)
 
     return all_sets
 
