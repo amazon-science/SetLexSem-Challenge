@@ -20,8 +20,8 @@ class TestReadConfig(unittest.TestCase):
             "OP_LIST": ["union", "intersection"],
             "SET_TYPES": ["numbers"],
             "N": [10],
-            "MA": [4],
-            "MB": [4],
+            "M_A": [4],
+            "M_B": [4],
             "ITEM_LEN": [3],
             "OVERLAP_FRACTION": [0],
             "DECILE_NUM": [-1],
@@ -44,8 +44,8 @@ class TestReadConfig(unittest.TestCase):
         self.assertEqual(config_values["OP_LIST"], ["union", "intersection"])
         self.assertEqual(config_values["SET_TYPES"], ["numbers"])
         self.assertEqual(config_values["N"], [10])
-        self.assertEqual(config_values["MA"], [4])
-        self.assertEqual(config_values["MB"], [4])
+        self.assertEqual(config_values["M_A"], [4])
+        self.assertEqual(config_values["M_B"], [4])
         self.assertEqual(config_values["ITEM_LEN"], [3])
         self.assertEqual(config_values["K_SHOT"], [4])
         self.assertEqual(config_values["PROMPT_TYPE"], ["formal_language"])

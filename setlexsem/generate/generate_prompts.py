@@ -294,8 +294,12 @@ def main(config_file, save_data, overwrite):
     # Sampler/Sets Config
     SET_TYPES = config["SET_TYPES"]
     N = replace_none(config["N"])
-    M_A = replace_none(config["M_A"])
-    M_B = replace_none(config["M_B"])
+    if "M" in config.keys():
+        M_A = replace_none(config["M"])
+        M_B = replace_none(config["M"])
+    else:
+        M_A = replace_none(config["M_A"])
+        M_B = replace_none(config["M_B"])
     ITEM_LEN = replace_none(config["ITEM_LEN"])
     OVERLAP_FRACTION = replace_none(config["OVERLAP_FRACTION"])
     DECILE_NUM = replace_none(config["DECILE_NUM"])

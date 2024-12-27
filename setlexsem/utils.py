@@ -79,7 +79,7 @@ def get_prompt_file_path(sampler_hp, prompt_hp, random_seed):
         random_seed,
     )
     experiment_folder_structure = os.path.join(
-        sampler_hp["set_type"],
+        sampler_hp["set_types"],
         prompt_hp["op_list"],
         prompt_hp["prompt_approach"],
     )
@@ -264,8 +264,12 @@ def read_config(
 
     SET_TYPES: List[str] = config["SET_TYPES"]
     N: List[int] = config["N"]
-    MA: List[int] = config["MA"]
-    MB: List[int] = config["MB"]
+    if "M" in config.keys():
+        MA: List[int] = config["M"]
+        MB: List[int] = config["M"]
+    else:
+        MA: List[int] = config["M_A"]
+        MB: List[int] = config["M_B"]
     ITEM_LEN: List[int] = config["ITEM_LEN"]
     OVERLAP_FRACTION: List[int] = config["OVERLAP_FRACTION"]
     DECILE_NUM: List[int] = config["DECILE_NUM"]
@@ -284,8 +288,8 @@ def read_config(
         "MODEL_NAME": MODEL_NAME,
         "SET_TYPES": SET_TYPES,
         "N": N,
-        "MA": MA,
-        "MB": MB,
+        "M_A": MA,
+        "M_B": MB,
         "ITEM_LEN": ITEM_LEN,
         "OVERLAP_FRACTION": OVERLAP_FRACTION,
         "DECILE_NUM": DECILE_NUM,
