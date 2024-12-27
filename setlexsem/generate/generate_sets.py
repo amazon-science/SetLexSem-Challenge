@@ -208,16 +208,9 @@ def make_hps_set(
 
 def get_sampler(hp: Dict[str, Any], random_state: random.Random) -> Sampler:
     set_type = hp["set_types"]
-
     if set_type == "numbers":
-        # override n if item-length is defined
-        if hp.get("item_len"):
-            n = None
-        else:
-            n = hp["n"]
-
         sampler = BasicNumberSampler(
-            n=n,
+            n=hp["n"] if hp.get("n") else None,
             m_A=hp["m_A"],
             m_B=hp["m_B"],
             item_len=hp.get("item_len"),
