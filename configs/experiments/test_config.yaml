@@ -3,16 +3,12 @@
 
 # Experiment settings
 STUDY_NAME: "TEST"  # The folder to store the experiment results
-N_RUN: 10  # The number of times to run the experiment
+N_RUN: 5  # The number of times to run the experiment
 LOAD_GENERATED_DATA: True  # Whether to load the already generated data for the Sampler
 RANDOM_SEED_VAL: 292  # The random seed value to use
 OP_LIST:  # The list of operations to perform
-  # - "union"
-  # - "intersection"
-  # - "difference"
-  # - "symmetric difference"
-  # - "cartesian product" # (Not All Runs include this - Mostly 0% Accuracy)
-  - "membership"
+  - "union"
+
 MODEL_NAME: "anthropic.claude-3-haiku-20240307-v1:0"
 
 # Sampler/Sets configuration
@@ -35,19 +31,13 @@ DECILE_NUM:
 
 # Prompt configuration
 K_SHOT:  # The number of examples to use in the prompt
-  # - 0
-  - 5
+  - 3
 
 PROMPT_TYPE:  # The type of prompt language to use
   - "formal_language"
-  # - "plain_language"
+
 PROMPT_APPROACH:  # The approach to use for the prompt (e.g., baseline, CoT)
   - "baseline"
-  # - "baseline_allow_empty"
-  # - "composite"
-  # - "composite_allow_empty"
-  # - "domain_expertise"
-  # - "self_recitation"
-  # - "chain_of_thought"
+
 IS_FIX_SHOT:  # Whether to use a fixed pre-defined sets across all experiments
   - True

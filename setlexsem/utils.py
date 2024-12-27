@@ -265,11 +265,11 @@ def read_config(
     SET_TYPES: List[str] = config["SET_TYPES"]
     N: List[int] = config["N"]
     if "M" in config.keys():  # backward compatibility
-        MA: List[int] = config["M"]
-        MB: List[int] = config["M"]
+        M_A: List[int] = config["M"]
+        M_B: List[int] = config["M"]
     else:
-        MA: List[int] = config["M_A"]
-        MB: List[int] = config["M_B"]
+        M_A: List[int] = config["M_A"]
+        M_B: List[int] = config["M_B"]
     ITEM_LEN: List[int] = config["ITEM_LEN"]
     OVERLAP_FRACTION: List[int] = config["OVERLAP_FRACTION"]
     DECILE_NUM: List[int] = config["DECILE_NUM"]
@@ -288,8 +288,8 @@ def read_config(
         "MODEL_NAME": MODEL_NAME,
         "SET_TYPES": SET_TYPES,
         "N": N,
-        "M_A": MA,
-        "M_B": MB,
+        "M_A": M_A,
+        "M_B": M_B,
         "ITEM_LEN": ITEM_LEN,
         "OVERLAP_FRACTION": OVERLAP_FRACTION,
         "DECILE_NUM": DECILE_NUM,
