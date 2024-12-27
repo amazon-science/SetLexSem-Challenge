@@ -107,7 +107,8 @@ def generate_set_pair(sampler: Union[Iterable, callable]) -> Tuple[set, set]:
         else:
             return sampler()
     except Exception as e:
-        logger.warning(f"Failed to generate set pair from sampler: {e}")
+        # to reduce warnings, we catch all these and surface at the end
+        logger.debug(f"Failed to generate set pair from sampler: {e}")
         return None, None
 
 
@@ -136,9 +137,9 @@ def make_sets_from_sampler(
             }
         )
 
-    if empty_sample_count >= 10:
+    if empty_sample_count > 0:
         logger.warning(
-            f"Sampled at least one empty set; {empty_sample_count} out of {num_runs} samples."
+            f"Did not sample for `{empty_sample_count} out of {num_runs} cases` because set hyperparameter conditions could not be met."
         )
 
     return set_list
