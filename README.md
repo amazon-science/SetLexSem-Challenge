@@ -194,12 +194,12 @@ python setlexsem/generate/generate_prompts.py --config-path "configs/generation_
 
 ## Run the evalution
 
-1. Create a config file like `configs/experiments/anthr_sonnet.yaml`
+1. Create a config file like `configs/experiments/test_config.yaml`
 2. Run the prompts:
 
-  ```bash
-  python setlexsem/experiment/run_experiments.py --account-number ACCOUNT_NUMBER --save-file --load-previous-run --config-file configs/experiments/anthr_sonnet.yaml
-  ```
+```bash
+python setlexsem/experiment/run_experiments.py --account-number ${ACCOUNT_NUMBER} --save-file --load-previous-run --config-file configs/experiments/test_config.yaml
+```
 
   **Note:** Currently, our experiments are dependent on AWS Bedrock and need an AWS account number to be provided. However, you have the capability to run experiments using OPENAI_KEY. We will add more instructions soon.
 

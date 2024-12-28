@@ -403,7 +403,7 @@ class BasicNumberSampler(Sampler):
         str
             Filename string.
         """
-        return f"N-{n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
+        return f"N-{self.n}_MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
     def to_dict(self):
         """

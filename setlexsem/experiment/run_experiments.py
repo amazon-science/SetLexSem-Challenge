@@ -7,7 +7,7 @@ from itertools import product
 
 import pandas as pd
 
-from setlexsem.constants import PATH_RESULTS_ROOT, PATH_ROOT, PATH_CONFIG_ROOT
+from setlexsem.constants import PATH_CONFIG_ROOT, PATH_RESULTS_ROOT, PATH_ROOT
 from setlexsem.experiment.experiment import run_experiment
 from setlexsem.experiment.lmapi import LMClass
 from setlexsem.generate.prompt import PromptConfig
@@ -89,8 +89,8 @@ if __name__ == "__main__":
     # Sampler/Sets Config
     SET_TYPES = config["SET_TYPES"]
     N = replace_none(config["N"])
-    M_A = replace_none(config["MA"])
-    M_B = replace_none(config["MB"])
+    M_A = replace_none(config["M_A"])
+    M_B = replace_none(config["M_B"])
     ITEM_LEN = replace_none(config["ITEM_LEN"])
     OVERLAP_FRACTION = replace_none(config["OVERLAP_FRACTION"])
     DECILE_NUM = replace_none(config["DECILE_NUM"])
@@ -111,11 +111,11 @@ if __name__ == "__main__":
             OP_LIST, K_SHOT, PROMPT_TYPE, PROMPT_APPROACH, IS_FIX_SHOT
         )
         dict_keys = [
-            'op_list',
-            'k_shot',
-            'prompt_type',
-            'prompt_approach',
-            'is_fix_shot',
+            "op_list",
+            "k_shot",
+            "prompt_type",
+            "prompt_approach",
+            "is_fix_shot",
         ]
         dict_list = [
             dict(zip(dict_keys, combination)) for combination in product_list
@@ -130,12 +130,12 @@ if __name__ == "__main__":
                 SET_TYPES, N, M_A, M_B, ITEM_LEN, DECILE_NUM, OVERLAP_FRACTION
             )
             dict_keys = [
-                'set_type',
-                'n',
-                'm_A',
-                'm_B',
-                'item_len',
-                'decile_num',
+                "set_types",
+                "n",
+                "m_A",
+                "m_B",
+                "item_len",
+                "decile_num",
             ]
             dict_list = [
                 dict(zip(dict_keys, combination))
@@ -150,12 +150,12 @@ if __name__ == "__main__":
                 SET_TYPES, N, M_A, M_B, ITEM_LEN, OVERLAP_FRACTION
             )
             dict_keys = [
-                'set_type',
-                'n',
-                'm_A',
-                'm_B',
-                'item_len',
-                'overlap_fraction',
+                "set_types",
+                "n",
+                "m_A",
+                "m_B",
+                "item_len",
+                "overlap_fraction",
             ]
             dict_list = [
                 dict(zip(dict_keys, combination))
@@ -216,8 +216,8 @@ if __name__ == "__main__":
 
             # Create Sampler()
             if (
-                hp["set_type"] == "numbers"
-                or "BasicNumberSampler" in hp["set_type"]
+                hp["set_types"] == "numbers"
+                or "BasicNumberSampler" in hp["set_types"]
             ):
                 sampler = BasicNumberSampler(
                     n=hp["n"],
@@ -227,8 +227,8 @@ if __name__ == "__main__":
                     random_state=random_state,
                 )
             elif (
-                hp["set_type"] == "words"
-                or "BasicWordSampler" in hp["set_type"]
+                hp["set_types"] == "words"
+                or "BasicWordSampler" in hp["set_types"]
             ):
                 sampler = BasicWordSampler(
                     n=hp["n"],
@@ -237,7 +237,7 @@ if __name__ == "__main__":
                     item_len=hp["item_len"],
                     random_state=random_state,
                 )
-            elif hp["set_type"] == "deceptive_words":
+            elif hp["set_types"] == "deceptive_words":
                 sampler = DeceptiveWordSampler(
                     n=hp["n"],
                     m_A=hp["m_A"],
@@ -247,7 +247,7 @@ if __name__ == "__main__":
                     swap_n=hp["m_A"]
                     // 2,  # TODO: swap_n should be not always be half of elements of set A
                 )
-            elif hp["set_type"] == "decile_words":
+            elif hp["set_types"] == "decile_words":
                 sampler = DecileWordSampler(
                     n=hp["n"],
                     m_A=hp["m_A"],
@@ -258,7 +258,7 @@ if __name__ == "__main__":
 
             # if overlapping, create OverlapSampler()
             try:
-                if "overlapping" in hp["set_type"]:
+                if "overlapping" in hp["set_types"]:
                     sampler = OverlapSampler(sampler, overlap_fraction=hp[4])
             except:
                 LOGGER.error("------> Error: Skipping this experiment")
