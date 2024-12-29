@@ -6,7 +6,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name="setlexsem",
-    version="0.0.1",
+    version="0.0.2",
     long_description=long_description,
     long_description_content_type='text/markdown',  # or 'text/x-rst' if using .rst
     packages=find_packages(),
