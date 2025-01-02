@@ -16,8 +16,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 CONTEXT_LENGTHS = {
-    "amazon.titan-tg1-large": 8000,
-    "amazon.titan-text-express-v1": 8000,
     "anthropic.claude-instant-v1": 100000,
     "anthropic.claude-v2:1": 200000,
     "anthropic.claude-3-sonnet-20240229-v1:0": 200000,
@@ -25,18 +23,13 @@ CONTEXT_LENGTHS = {
     "mistral.mistral-large-2402-v1:0": 32000,
     "mistral.mistral-small-2402-v1:0": 32000,
     "meta.llama3-70b-instruct-v1:0": 8000,
+    "anthropic.claude-3-5-haiku-20241022-v1:0": 200000,
+    "anthropic.claude-3-5-sonnet-20241022-v2:0": 200000,
+    "amazon.nova-micro-v1:0": 128000,
+    "amazon.nova-lite-v1:0": 300000,
+    "amazon.nova-pro-v1:0": 300000,
 }
 
-SUPPORTED_MODELS = [
-    "anthropic.claude-instant-v1",
-    "anthropic.claude-v2:1",
-    "anthropic.claude-3-sonnet-20240229-v1:0",
-    "anthropic.claude-3-haiku-20240307-v1:0",
-    "openai.gpt-3.5-turbo-0613",
-    "mistral.mistral-large-2402-v1:0",
-    "mistral.mistral-small-2402-v1:0",
-    "meta.llama3-70b-instruct-v1:0",
-]
 
 BEDROCK_MODELS = [
     "anthropic.claude-instant-v1",
@@ -46,7 +39,14 @@ BEDROCK_MODELS = [
     "mistral.mistral-large-2402-v1:0",
     "mistral.mistral-small-2402-v1:0",
     "meta.llama3-70b-instruct-v1:0",
+    "anthropic.claude-3-5-haiku-20241022-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "us.amazon.nova-micro-v1:0",
+    "us.amazon.nova-lite-v1:0",
+    "us.amazon.nova-pro-v1:0",
 ]
+
+SUPPORTED_MODELS = BEDROCK_MODELS + ["openai.gpt-3.5-turbo-0613"]
 
 
 class LMClass:
@@ -54,15 +54,17 @@ class LMClass:
     an AI model and allows conversing with it"""
 
     # Initialize with model name and optional account number
-    def __init__(self, model_name, account_number=None):
+    def __init__(
+        self, model_name, account_number=None, temperature=0, top_k=1, top_p=1
+    ):
         assert (
             model_name in SUPPORTED_MODELS
         ), f"{model_name} is not defined and tested"
         # define the LLM parameters
         self.model_name = model_name
-        self.temperature = 0.1
-        self.top_k = 20
-        self.top_p = 0.25
+        self.temperature = temperature
+        self.top_k = top_k
+        self.top_p = top_p
         self.context_length_dict = -1
 
         self.bedrock_model = 0
@@ -171,13 +173,18 @@ def make_bedrock_body(
         if "amazon" in model_id:
             body = json.dumps(
                 {
-                    "inputText": prompt,
-                    "textGenerationConfig": {
-                        "maxTokenCount": 1024,  # TODO: refactor
-                        "stopSequences": [],
+                    "inferenceConfig": {
+                        "max_new_tokens": 1000,
                         "temperature": temperature,
-                        "topP": top_p,
+                        "top_k": top_k,
+                        "top_p": top_p,
                     },
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [{"text": prompt}],
+                        }
+                    ],
                 }
             )
 
@@ -368,12 +375,16 @@ def get_bedrock_lm_response(
     lm_output, _ = invoke_bedrock(bedrock, model_id, body)
 
     if "amazon" in model_id:
-        bedrock_response = json.loads(lm_output.get("body").read()).get(
-            "results"
-        )[0]
+        # read byte string as string
+        bedrock_response = ast.literal_eval(
+            lm_output.get("body").read().decode("utf8")
+        )
         if debug:
-            print(f'Stop Reason: {bedrock_response.get("completionReason")}')
-        output_text = bedrock_response.get("outputText")
+            print(f'LM Stop Reason: {bedrock_response["stopReason"]}')
+
+        output_text = bedrock_response["output"]["message"]["content"][0][
+            "text"
+        ]
 
     elif "anthropic" in model_id:
         bedrock_response = json.loads(
