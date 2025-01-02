@@ -207,9 +207,9 @@ def make_bedrock_body(
                         ],
                         "max_tokens": max_tokens_to_sample,
                         "stop_sequences": [],
-                        # "temperature": temperature,  # TODO: Not in # guidelines  # noqa: E501
-                        # "top_k": top_k,  # TODO: Not in guidelines
-                        # "top_p": top_p,  # TODO: Not in guidelines
+                        "temperature": temperature,
+                        "top_k": top_k,
+                        "top_p": top_p,
                         "anthropic_version": "bedrock-2023-05-31",
                     }
                 )
