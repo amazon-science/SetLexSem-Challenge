@@ -29,6 +29,7 @@ M:  # The number of members in the sets
 
 ITEM_LEN:  # The length of the items in the sets (e.g., 3 -> 526 or 4 -> book)
   - None
+  - 3
 
 
 OVERLAP_FRACTION: # Forcing the two sets to have an overlap based on this fraction
@@ -41,7 +42,7 @@ DECILE_NUM: # To select words that are less or more frequence (lower decide mean
 K_SHOT:  # The number of examples to use in the prompt
   - 0
   # - 1
-  # - 3
+  - 3
   # - 5
 
 PROMPT_TYPE:  # The type of prompt language to use
@@ -51,7 +52,7 @@ PROMPT_TYPE:  # The type of prompt language to use
 PROMPT_APPROACH:  # The approach to use for the prompt (e.g., baseline, CoT)
   - "baseline"
   # - "baseline_allow_empty"
-  # - "composite"
+  - "composite"
   # - "composite_allow_empty"
   # - "domain_expertise"
   # - "self_recitation"

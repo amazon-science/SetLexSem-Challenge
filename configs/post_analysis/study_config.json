@@ -1,8 +1,8 @@
 {
-    "study_name":  "240505_ClaudeHaiku",
-    "object": "words",
+    "study_name":  "250111_NovaLite_Deceptive",
+    "object": "deceptive_words",
     "operation": "union",
-    "item_len": 2,
+    "item_len": "None",
     "n_items": 2,
     "k_shots": 0,
     "prompt_approach": "baseline"

@@ -262,7 +262,11 @@ def create_results_df_from_folder(path_study):
                     if "noswap" in root.lower():
                         df["swapped"] = int(0)
                     else:
-                        df["swapped"] = get_keys(hyperparameters, "swapped")
+                        df["swapped"] = int(
+                            get_keys(
+                                hyperparameters, "swapped", change_none_to=0
+                            )
+                        )
 
                 df_all = pd.concat([df_all, df.reset_index(drop=True)])
 
@@ -499,6 +503,7 @@ def save_processed_results(study_name, hps=HPS, overwrite=False):
     df_results["model_name"] = model_name
     df_results["is_deceptive"] = df_results["is_deceptive"].astype(int)
     df_results["decile_num"] = df_results["decile_num"].astype(int)
+    df_results["swapped"] = df_results["swapped"].astype(int)
     df_results["study_name"] = study_name
 
     # save aggregation
@@ -538,6 +543,7 @@ def assign_types(df):
     df["item_len"] = df["item_len"].astype(int)
 
     df["is_deceptive"] = df["is_deceptive"].astype(int)
+    df["swapped"] = df["swapped"].astype(int)
     df["decile_num"] = df["decile_num"].astype(int)
 
     ordered_operations = [
@@ -573,6 +579,9 @@ def assign_types(df):
         "mistralL",
         "mistralS",
         "llama",
+        "nova-micro",
+        "nova-lite",
+        "nova-pro",
     ]
     df["model_name"] = df["model_name"].astype("category")
     df["model_name"] = df["model_name"].cat.set_categories(

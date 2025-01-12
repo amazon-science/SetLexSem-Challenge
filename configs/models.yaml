@@ -1,3 +1,4 @@
+# price is dollar per token
 anthropic.claude-instant-v1:
   price_in: 8.0e-7
   price_out: 2.4e-6
@@ -30,3 +31,15 @@ meta.llama3-70b-instruct-v1:0:
   price_in: 2.65e-6
   price_out: 3.5e-6
   short_name: llama
+us.amazon.nova-micro-v1:0:
+  price_in: 3.5e-8
+  price_out: 1.4e-7
+  short_name: nova-micro
+us.amazon.nova-lite-v1:0:
+  price_in: 6.0e-8
+  price_out:  2.4e-7
+  short_name: nova-lite
+us.amazon.nova-pro-v1:
+  price_in: 8.0e-7
+  price_out:  3.2e-7
+  short_name: nova-pro
