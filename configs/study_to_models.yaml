@@ -1,0 +1,13 @@
+240505_ClaudeHaiku: anthropic.claude-3-haiku-20240307-v1:0
+240508_ClaudeHaiku_Overlap50: anthropic.claude-3-haiku-20240307-v1:0
+240508_ClaudeHaiku_Deceptive:  anthropic.claude-3-haiku-20240307-v1:0
+240508_ClaudeHaiku_Deceptive_NoSwap:  anthropic.claude-3-haiku-20240307-v1:0
+240507_GPT35:  openai.gpt-3.5-turbo-0613
+240506_Deciles_ClaudeHaiku:  anthropic.claude-3-haiku-20240307-v1:0
+240513_ClaudeSonnet:  anthropic.claude-3-sonnet-20240229-v1:0
+240513_MistralLarge:  mistral.mistral-large-2402-v1:0
+240514_ClaudeInstant:   anthropic.claude-instant-v1
+240531_ClaudeHaiku:  anthropic.claude-3-haiku-20240307-v1:0
+240924_MistralSmall:  mistral.mistral-small-2402-v1:0
+240924_MetaLlama:   meta.llama3-70b-instruct-v1:0
+250111_NovaLite_Deceptive:   us.amazon.nova-lite-v1:0

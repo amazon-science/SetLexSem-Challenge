@@ -12,9 +12,10 @@ from setlexsem.constants import (
     HPS,
     PATH_ANALYSIS,
     PATH_ANALYSIS_CONFIG_ROOT,
-    PRICING_PER_TOKEN,
-    STUDY2MODEL,
+    PATH_CONFIG_ROOT,
 )
+from setlexsem.experiment.lmapi import PRICING_PER_TOKEN
+from setlexsem.utils import read_yaml
 
 
 def validate_analysis_config_file(study_dict):
@@ -49,11 +50,13 @@ def main():
         * 100
     )
 
-    model_name = STUDY2MODEL[study_name]
+    model_name = read_yaml(
+        os.path.join(PATH_CONFIG_ROOT, "study_to_models.yaml")
+    )[study_name]
 
     try:
-        price_in = PRICING_PER_TOKEN[model_name]["in"]
-        price_out = PRICING_PER_TOKEN[model_name]["out"]
+        price_in = PRICING_PER_TOKEN[model_name]["price_in"]
+        price_out = PRICING_PER_TOKEN[model_name]["price_out"]
     except KeyError:
         raise KeyError("Invalid study name for cost calculation")
 
