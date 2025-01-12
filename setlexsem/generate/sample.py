@@ -77,6 +77,13 @@ def make_sampler_name_from_hps(sampler_hps):
     if sampler_hps.get("decile_num") is not None:
         components.append(f"Decile-{sampler_hps['decile_num']}")
 
+    if (sampler_hps.get("swap_status") is not None) and (
+        sampler_hps.get("swap_status")
+    ):
+        components.append(
+            f"Swapped-{sampler_hps['m_A'] // 2}"
+        )  # TODO: Change this to be a parameter (swap_n in config)
+
     return "_".join(components)
 
 
@@ -846,7 +853,7 @@ class DeceptiveWordSampler(Sampler):
         name_pre = f"MA-{self.m_A}_MB-{self.m_B}_L-{self.item_len}"
 
         if self.swap_set_elements:
-            return f"{name_pre}_DeceptiveWords_Swapped-{self.subset_size}"
+            return f"{name_pre}_DeceptiveWords_Swapped-{self.swap_n}"
         else:
             return f"{name_pre}_DeceptiveWords"
 

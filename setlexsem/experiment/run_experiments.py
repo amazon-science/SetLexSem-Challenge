@@ -1,29 +1,20 @@
 import argparse
 import ast
+import itertools
 import logging
 import os
 import random
-from itertools import product
 
 import pandas as pd
 
 from setlexsem.constants import PATH_CONFIG_ROOT, PATH_RESULTS_ROOT, PATH_ROOT
 from setlexsem.experiment.experiment import run_experiment
 from setlexsem.experiment.lmapi import LMClass
+from setlexsem.generate.generate_prompts import make_hps_prompt, replace_none
+from setlexsem.generate.generate_sets import get_sampler, make_hps_set
 from setlexsem.generate.prompt import PromptConfig
-from setlexsem.generate.sample import (
-    BasicNumberSampler,
-    BasicWordSampler,
-    DeceptiveWordSampler,
-    DecileWordSampler,
-    OverlapSampler,
-)
 from setlexsem.generate.utils_io import load_generated_data
 from setlexsem.utils import get_study_paths, read_config
-
-
-def replace_none(list_in):
-    return [None if x == "None" else x for x in list_in]
 
 
 # define argparser
@@ -71,9 +62,6 @@ if __name__ == "__main__":
     LOGGER = logging.getLogger(__name__)
     LOGGER.setLevel(level=logging.INFO)
 
-    # TODO: Add this to Config
-    SWAP_STATUS = False
-
     # Read Config File and Assign Variables
     config = read_config(CONFIG_FILE)
 
@@ -94,6 +82,7 @@ if __name__ == "__main__":
     ITEM_LEN = replace_none(config["ITEM_LEN"])
     OVERLAP_FRACTION = replace_none(config["OVERLAP_FRACTION"])
     DECILE_NUM = replace_none(config["DECILE_NUM"])
+    SWAP_STATUS = replace_none(config["SWAP_STATUS"])
 
     assert (
         len(OVERLAP_FRACTION) == 1
@@ -105,66 +94,29 @@ if __name__ == "__main__":
     PROMPT_APPROACH = config["PROMPT_APPROACH"]
     IS_FIX_SHOT = config["IS_FIX_SHOT"]
 
-    # generator for prompts
-    def make_hps_prompt():
-        product_list = product(
-            OP_LIST, K_SHOT, PROMPT_TYPE, PROMPT_APPROACH, IS_FIX_SHOT
-        )
-        dict_keys = [
-            "op_list",
-            "k_shot",
-            "prompt_type",
-            "prompt_approach",
-            "is_fix_shot",
-        ]
-        dict_list = [
-            dict(zip(dict_keys, combination)) for combination in product_list
-        ]
-        return dict_list
-
     # generator for set construction
-    if DECILE_NUM[0] is not None:
+    make_hps_set_generator = make_hps_set(
+        set_types=SET_TYPES,
+        n=N,
+        m_A=M_A,
+        m_B=M_B,
+        item_len=ITEM_LEN,
+        decile_group=DECILE_NUM,
+        swap_status=SWAP_STATUS,
+        overlap_fraction=OVERLAP_FRACTION,
+    )
+    make_hps_set_generator, make_hps_set_generator_copy = itertools.tee(
+        make_hps_set_generator
+    )
 
-        def make_hps():
-            product_list = product(
-                SET_TYPES, N, M_A, M_B, ITEM_LEN, DECILE_NUM, OVERLAP_FRACTION
-            )
-            dict_keys = [
-                "set_types",
-                "n",
-                "m_A",
-                "m_B",
-                "item_len",
-                "decile_num",
-            ]
-            dict_list = [
-                dict(zip(dict_keys, combination))
-                for combination in product_list
-            ]
-            return dict_list
-
-    else:
-
-        def make_hps():
-            product_list = product(
-                SET_TYPES, N, M_A, M_B, ITEM_LEN, OVERLAP_FRACTION
-            )
-            dict_keys = [
-                "set_types",
-                "n",
-                "m_A",
-                "m_B",
-                "item_len",
-                "overlap_fraction",
-            ]
-            dict_list = [
-                dict(zip(dict_keys, combination))
-                for combination in product_list
-            ]
-            return dict_list
-
+    # generator for prompts
+    make_hps_prompt_generator = make_hps_prompt(
+        OP_LIST, K_SHOT, PROMPT_TYPE, PROMPT_APPROACH, IS_FIX_SHOT
+    )
     # report number of overall experiments
-    n_experiments = len(list(make_hps())) * len(list(make_hps_prompt()))
+    n_experiments = len(list(make_hps_set_generator_copy)) * len(
+        list(make_hps_prompt_generator)
+    )
     LOGGER.info(f"Experiment will run for {n_experiments} times")
 
     # create the LLM class
@@ -172,8 +124,11 @@ if __name__ == "__main__":
 
     # go through hyperparameters and run the experiment
     counter_exp = 1
-    for hp in make_hps():
-        for hp_prompt in make_hps_prompt():
+    for hp_set in make_hps_set_generator:
+        make_hps_prompt_generator = make_hps_prompt(
+            OP_LIST, K_SHOT, PROMPT_TYPE, PROMPT_APPROACH, IS_FIX_SHOT
+        )
+        for hp_prompt in make_hps_prompt_generator:
             LOGGER.info(
                 f"-------- EXPERIMENT #{counter_exp} out of {n_experiments}"
             )
@@ -181,7 +136,7 @@ if __name__ == "__main__":
             last_run_check = False
             df_last_run = pd.DataFrame()
             path_study, path_results = get_study_paths(
-                hp,
+                hp_set,
                 hp_prompt,
                 random_seed=RANDOM_SEED_VAL,
                 study_name=STUDY_NAME,
@@ -214,57 +169,15 @@ if __name__ == "__main__":
             # Initilize Seed for each combination
             random_state = random.Random(RANDOM_SEED_VAL)
 
-            # Create Sampler()
-            if (
-                hp["set_types"] == "numbers"
-                or "BasicNumberSampler" in hp["set_types"]
-            ):
-                sampler = BasicNumberSampler(
-                    n=hp["n"],
-                    m_A=hp["m_A"],
-                    m_B=hp["m_B"],
-                    item_len=hp["item_len"],
-                    random_state=random_state,
-                )
-            elif (
-                hp["set_types"] == "words"
-                or "BasicWordSampler" in hp["set_types"]
-            ):
-                sampler = BasicWordSampler(
-                    n=hp["n"],
-                    m_A=hp["m_A"],
-                    m_B=hp["m_B"],
-                    item_len=hp["item_len"],
-                    random_state=random_state,
-                )
-            elif hp["set_types"] == "deceptive_words":
-                sampler = DeceptiveWordSampler(
-                    n=hp["n"],
-                    m_A=hp["m_A"],
-                    m_B=hp["m_B"],
-                    random_state=random_state,
-                    swap_set_elements=SWAP_STATUS,
-                    swap_n=hp["m_A"]
-                    // 2,  # TODO: swap_n should be not always be half of elements of set A
-                )
-            elif hp["set_types"] == "decile_words":
-                sampler = DecileWordSampler(
-                    n=hp["n"],
-                    m_A=hp["m_A"],
-                    m_B=hp["m_B"],
-                    item_len=hp["item_len"],
-                    decile_num=hp["decile_num"],
-                )
-
-            # if overlapping, create OverlapSampler()
+            # Create Sampler
             try:
-                if "overlapping" in hp["set_types"]:
-                    sampler = OverlapSampler(sampler, overlap_fraction=hp[4])
-            except:
-                LOGGER.error("------> Error: Skipping this experiment")
+                sampler = get_sampler(hp=hp_set, random_state=random_state)
+            except Exception as e:
+                LOGGER.warning(f"No sampler: {hp_set} | {e}")
                 counter_exp += 1
                 continue
             LOGGER.info(sampler)
+
             # create k-shot sampler
             k_shot_sampler = sampler.create_sampler_for_k_shot()
 
