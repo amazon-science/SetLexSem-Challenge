@@ -212,7 +212,11 @@ python scripts/save_processed_results_for_study_list.py
 4, Analysis of cost, latency, and performance metrics for one set of hyperparameters for a particular study - enter hyperparameter values in the configs/post_analysis/study_config.json
 
 ```bash
-python scripts/analysis_for_one_study.py
+python scripts/analysis_for_one_study.py --config-filename "study_config.json"
+```
+If you want to change how you group the results, you can add those as an argument:
+```bash
+python scripts/analysis_for_one_study.py --grouping-items "object_type" "operation_type" "swapped" --config-filename "study_config.json"
 ```
 
 * Generate figures using notebooks/Hypothesis Testing - Manuscript.ipynb. Validate the filtering criterias in configs/post_hypothesis/hypothesis.json

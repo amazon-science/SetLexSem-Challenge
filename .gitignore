@@ -1,5 +1,6 @@
 *.egg-info
 *.coverage*
+setup.ipynb
 data
 __pycache__
 venv

@@ -1,0 +1,11 @@
+{
+    "study_name":  "250111_NovaLite_Deceptive",
+    "object": "deceptive_words",
+    "operation": "union",
+    "item_len": 3,
+    "n_items_in_A": 2,
+    "n_items_in_B": 2,
+    "k_shots": 3,
+    "prompt_approach": "composite",
+    "swapped": 1
+}

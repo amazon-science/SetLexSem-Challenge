@@ -30,32 +30,6 @@ if os.path.exists(os.path.join(PATH_ROOT, "secrets.txt")):
     with open(os.path.join(PATH_ROOT, "secrets.txt"), "r") as file:
         ACCOUNT_NUMBER = int(file.read())
 
-PRICING_PER_TOKEN = {
-    "instant": {"in": 0.00080 * 10**-3, "out": 0.00240 * 10**-3},
-    "v2": {"in": 0.0080 * 10**-3, "out": 0.0240 * 10**-3},
-    "sonnet": {"in": 0.0030 * 10**-3, "out": 0.0150 * 10**-3},
-    "haiku": {"in": 0.00025 * 10**-3, "out": 0.00125 * 10**-3},
-    "gpt35": {"in": 0.00150 * 10**-3, "out": 0.00200 * 10**-3},
-    "mistralL": {"in": 0.0080 * 10**-3, "out": 0.0240 * 10**-3},
-    "mistralS": {"in": 0.001 * 10**-3, "out": 0.003 * 10**-3},
-    "llama": {"in": 0.00265 * 10**-3, "out": 0.0035 * 10**-3},
-}
-
-STUDY2MODEL = {
-    "240505_ClaudeHaiku": "haiku",
-    "240508_ClaudeHaiku_Overlap50": "haiku",
-    "240508_ClaudeHaiku_Deceptive": "haiku",
-    "240508_ClaudeHaiku_Deceptive_NoSwap": "haiku",
-    "240507_GPT35": "gpt35",
-    "240506_Deciles_ClaudeHaiku": "haiku",
-    "240513_ClaudeSonnet": "sonnet",
-    "240513_MistralLarge": "mistralL",
-    "240514_ClaudeInstant": "instant",
-    "240531_ClaudeHaiku": "haiku",
-    "240924_MistralSmall": "mistralS",
-    "240924_MetaLlama": "llama",
-}
-
 HPS = [
     "object_type",
     "operation_type",

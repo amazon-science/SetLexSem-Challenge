@@ -3,6 +3,7 @@
 import ast
 import json
 import logging
+import os
 import random
 import re
 import subprocess
@@ -11,6 +12,9 @@ import time
 import boto3
 import tiktoken
 from openai import OpenAI
+
+from setlexsem.constants import PATH_ROOT
+from setlexsem.utils import read_yaml
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +51,8 @@ BEDROCK_MODELS = [
 ]
 
 SUPPORTED_MODELS = BEDROCK_MODELS + ["openai.gpt-3.5-turbo-0613"]
+
+PRICING_PER_TOKEN = read_yaml(os.path.join(PATH_ROOT, "configs/models.yaml"))
 
 
 class LMClass:
