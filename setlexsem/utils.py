@@ -278,6 +278,9 @@ def read_config(
     PROMPT_TYPE: List[Literal["formal_language"]] = config["PROMPT_TYPE"]
     PROMPT_APPROACH: List[Literal["baseline"]] = config["PROMPT_APPROACH"]
     IS_FIX_SHOT: List[bool] = config["IS_FIX_SHOT"]
+    SWAP_STATUS: List[bool] = (
+        config["SWAP_STATUS"] if "SWAP_STATUS" in config else None
+    )
 
     return {
         "STUDY_NAME": STUDY_NAME,
@@ -297,6 +300,7 @@ def read_config(
         "PROMPT_TYPE": PROMPT_TYPE,
         "PROMPT_APPROACH": PROMPT_APPROACH,
         "IS_FIX_SHOT": IS_FIX_SHOT,
+        "SWAP_STATUS": SWAP_STATUS,
     }
 
 

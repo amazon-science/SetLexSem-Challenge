@@ -529,7 +529,7 @@ def parse_lm_response(result):
         if "set(" in result_only_answer:
             result_only_answer = result_only_answer.replace("set(", "")[:-1]
         # check the set pattern and make the Python set
-        pattern = r"[a-zA-Z0-9 ]+"
+        pattern = r"[a-zA-Z0-9.\-_ ]+"
         letters = re.findall(pattern, result_only_answer.replace(" ", ""))
         result_clean = ""
         for letter in letters:

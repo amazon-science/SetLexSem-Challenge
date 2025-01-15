@@ -26,6 +26,12 @@ def test_parse_lm_response():
     result = " {1,'a','hello',5}"
     result_obj = parse_lm_response("<answer>" + result + "</answer>")
     assert result_obj == {"a", 1, 5, "hello"}
+    result = " {1,'F.I.C.S','hello',5}"
+    result_obj = parse_lm_response("<answer>" + result + "</answer>")
+    assert result_obj == {"F.I.C.S", 1, 5, "hello"}
+    result = " {1,'F-I-C.-S','he_llo',5}"
+    result_obj = parse_lm_response("<answer>" + result + "</answer>")
+    assert result_obj == {"F-I-C.-S", 1, 5, "he_llo"}
 
 
 if __name__ == "__main__":
