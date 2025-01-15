@@ -134,7 +134,7 @@ if __name__ == "__main__":
             )
             # initilize the last run check
             last_run_check = False
-            df_last_run = pd.DataFrame()
+            df_last_run = pd.DataFrame()  # it has to be empty to start withs
             path_study, path_results = get_study_paths(
                 hp_set,
                 hp_prompt,
@@ -145,13 +145,12 @@ if __name__ == "__main__":
             if os.path.exists(path_results):
                 if LOAD_LAST_RUN:
                     last_run_check = True
-                    # LOGGER.info(f"Loading Last Run: {path_results}")
                     df_last_run = pd.read_csv(path_results)
                     last_run_count = len(df_last_run)
                     N_RUN_LEFT = N_RUN - last_run_count
                     if N_RUN <= last_run_count:
                         LOGGER.warning(
-                            "--> Skipping, model is saved for all n-runs"
+                            f"--> Skipping, model is saved for all {N_RUN}-runs"
                         )
                         counter_exp += 1
                         continue
@@ -164,7 +163,7 @@ if __name__ == "__main__":
                 N_RUN_LEFT = N_RUN
 
             if N_RUN_LEFT != N_RUN:
-                LOGGER.info(f"Changed number of runs to {N_RUN_LEFT}")
+                LOGGER.info(f"Adjusted the number of runs to {N_RUN_LEFT}")
 
             # Initilize Seed for each combination
             random_state = random.Random(RANDOM_SEED_VAL)

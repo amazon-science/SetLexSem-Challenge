@@ -13,7 +13,6 @@ from setlexsem.constants import (
     PATH_CONFIG_ROOT,
     PATH_POSTPROCESS,
     PATH_RESULTS_ROOT,
-    STUDY2MODEL,
 )
 from setlexsem.generate.sample import make_sampler_name_from_hps
 
@@ -29,6 +28,25 @@ DEMONSTRATION_TYPES = [
 logging.basicConfig()
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(level=logging.INFO)
+
+
+def read_yaml(path_to_yaml):
+    """Read a yaml file and return the content as a dictionary."""
+    try:
+        with open(path_to_yaml, "r") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        LOGGER.error(f"File {path_to_yaml} not found.")
+        return None
+
+
+def read_study_names():
+    """Read existing study names"""
+    study_names = []
+    for folder in os.listdir(PATH_RESULTS_ROOT):
+        if os.path.isdir(os.path.join(PATH_RESULTS_ROOT, folder)):
+            study_names.append(folder)
+    return study_names
 
 
 def get_study_paths(
@@ -105,42 +123,28 @@ def create_filename(prompt_type, sampler_name, k_shot, random_seed_value):
 
 def extract_values(filename):
     """Get the experiment values"""
-    # If you change below, make sure you change the "paremeters_format" above
-    # too.
-    if "O-" in filename:
-        matches = re.search(
-            r"K-(\w+)_N-(\w+)_M-(\d+)_L-(\w+)_O-(\d+\.\d+)_S", filename
-        )
-        return (
-            matches.group(1),
-            matches.group(2),
-            matches.group(3),
-            matches.group(4),
-            matches.group(5),
-            "None",
-        )
-    elif "Decile-" in filename:
-        matches = re.search(
-            r"K-(\w+)_N-(\w+)_M-(\d+)_L-(\w+)_Decile-(\w+)_S", filename
-        )
-        return (
-            matches.group(1),
-            matches.group(2),
-            matches.group(3),
-            matches.group(4),
-            "None",
-            matches.group(5),
-        )
-    else:
-        matches = re.search(r"K-(\w+)_N-(\w+)_M-(\d+)_L-(\w+)_S", filename)
-        return (
-            matches.group(1),
-            matches.group(2),
-            matches.group(3),
-            matches.group(4),
-            "None",
-            "None",
-        )
+    params = {}
+
+    # Define patterns for each parameter we're interested in
+    patterns = {
+        "k_shots": r"K-([^_]+)",
+        "max_value": r"N-([^_]+)",
+        "n_items": r"M-([^_]+)",
+        "n_items_in_A": r"MA-([^_]+)",
+        "n_items_in_B": r"MB-([^_]+)",
+        "item_len": r"L-([^_]+)",
+        "overlap": r"O-([^_]+)",
+        "decile_num": r"Decile-([^_]+)",
+        "swapped": r"Swapped-([^_]+)",
+    }
+
+    # Extract values for each parameter if present in the filename
+    for key, pattern in patterns.items():
+        match = re.search(pattern, filename)
+        if match:
+            params[key] = match.group(1)
+
+    return params
 
 
 def make_object_set(df_in, column_name):
@@ -174,7 +178,9 @@ def create_results_df_from_folder(path_study):
                 ), "Error saving data: Operation name is inconsistent."
                 df = df.drop(columns=["op_name"])
 
-                k, n, m, item_len, overlap, deciles = extract_values(filename)
+                # k, n, m, item_len, overlap, deciles = extract_values(filename)
+                hyperparameters = extract_values(filename)
+
                 if any(type in filename for type in DEMONSTRATION_TYPES):
                     df["prompt_type"] = [
                         type
@@ -184,12 +190,35 @@ def create_results_df_from_folder(path_study):
                 else:
                     raise ValueError("No prompt type!")
 
-                df["n_items"] = m
-                df["k_shots"] = 0 if k == "None" else k
-                df["overlap"] = overlap
-                df["item_len"] = item_len
+                def get_keys(params, x, change_none_to="None"):
+                    if x in params:
+                        if change_none_to != "None":
+                            if params[x] == "None":
+                                return change_none_to
+                        return params[x]
+                    else:
+                        if change_none_to != "None":
+                            return change_none_to
+                        return "None"
+
+                df["n_items"] = get_keys(
+                    hyperparameters, "n_items", change_none_to=-1
+                )
+                df["n_items_in_A"] = get_keys(
+                    hyperparameters, "n_items_in_A", change_none_to=-1
+                )
+                df["n_items_in_B"] = get_keys(
+                    hyperparameters, "n_items_in_B", change_none_to=-1
+                )
+                df["k_shots"] = get_keys(
+                    hyperparameters, "k_shots", change_none_to=0
+                )
+                df["overlap"] = get_keys(hyperparameters, "overlap")
+                df["item_len"] = get_keys(hyperparameters, "item_len")
                 if list(df["item_len"].unique())[0] is None:
-                    df["max_value"] = n
+                    df["max_value"] = get_keys(
+                        hyperparameters, "max_value", change_none_to=-1
+                    )
                 else:
                     df["max_value"] = -1
 
@@ -201,7 +230,12 @@ def create_results_df_from_folder(path_study):
 
                 # adjust type fo columns
                 df["k_shots"] = df["k_shots"].astype(int)
-                df["n_items"] = df["n_items"].astype(int)
+                try:
+                    df["n_items"] = df["n_items"].astype(int)
+                except ValueError:
+                    raise ValueError(
+                        f"Error converting n_items to int: {filename}"
+                    )
                 try:
                     df["item_len"] = df["item_len"].astype(int)
                 except ValueError:
@@ -218,8 +252,9 @@ def create_results_df_from_folder(path_study):
                 ), "Error: more than one object type"
                 df["is_deceptive"] = int(0)
                 df["decile_num"] = int(-1)
-                if deciles != "None":
-                    df["decile_num"] = int(deciles)
+                decile_num = get_keys(hyperparameters, "decile_num")
+                if decile_num != "None":
+                    df["decile_num"] = int(decile_num)
 
                 df["swapped"] = int(-1)
                 if "deceptive" in obj_type_list[0].lower():
@@ -227,7 +262,11 @@ def create_results_df_from_folder(path_study):
                     if "noswap" in root.lower():
                         df["swapped"] = int(0)
                     else:
-                        df["swapped"] = int(1)
+                        df["swapped"] = int(
+                            get_keys(
+                                hyperparameters, "swapped", change_none_to=0
+                            )
+                        )
 
                 df_all = pd.concat([df_all, df.reset_index(drop=True)])
 
@@ -398,7 +437,9 @@ def get_accuracy_metrics(ground_truth, model_output):
 
 def save_processed_results(study_name, hps=HPS, overwrite=False):
     """Save processed results of a study"""
-    model_name = STUDY2MODEL[study_name]
+    model_name = read_yaml(
+        os.path.join(PATH_CONFIG_ROOT, "study_to_models.yaml")
+    )[study_name]
     path_study = os.path.join(PATH_RESULTS_ROOT, study_name)
     path_study_all_runs_raw = os.path.join(
         PATH_POSTPROCESS, f"{study_name}_all_runs.csv"
@@ -407,6 +448,7 @@ def save_processed_results(study_name, hps=HPS, overwrite=False):
         PATH_POSTPROCESS, f"{study_name}.csv"
     )
     os.makedirs(PATH_ANALYSIS, exist_ok=True)
+    os.makedirs(PATH_POSTPROCESS, exist_ok=True)
     path_analysis = os.path.join(PATH_ANALYSIS, f"{study_name}.csv")
 
     # data regarding all runs
@@ -461,6 +503,7 @@ def save_processed_results(study_name, hps=HPS, overwrite=False):
     df_results["model_name"] = model_name
     df_results["is_deceptive"] = df_results["is_deceptive"].astype(int)
     df_results["decile_num"] = df_results["decile_num"].astype(int)
+    df_results["swapped"] = df_results["swapped"].astype(int)
     df_results["study_name"] = study_name
 
     # save aggregation
@@ -500,6 +543,7 @@ def assign_types(df):
     df["item_len"] = df["item_len"].astype(int)
 
     df["is_deceptive"] = df["is_deceptive"].astype(int)
+    df["swapped"] = df["swapped"].astype(int)
     df["decile_num"] = df["decile_num"].astype(int)
 
     ordered_operations = [
@@ -535,6 +579,9 @@ def assign_types(df):
         "mistralL",
         "mistralS",
         "llama",
+        "nova-micro",
+        "nova-lite",
+        "nova-pro",
     ]
     df["model_name"] = df["model_name"].astype("category")
     df["model_name"] = df["model_name"].cat.set_categories(
@@ -543,26 +590,18 @@ def assign_types(df):
     return df
 
 
-def convert_model_name(model_name):
-    return {
-        "instant": "Claude Instant",
-        "sonnet": "Claude Sonnet",
-        "haiku": "Claude Haiku",
-        "gpt35": "GPT 3.5",
-        "mistralL": "Mistral Large",
-    }[model_name]
-
-
 def make_nice(df_in):
     """Converts the code names to camera-ready names"""
     nice_map = {
-        "instant": "Claude Instant",
-        "sonnet": "Claude Sonnet",
-        "haiku": "Claude Haiku",
-        "gpt35": "GPT 3.5-Turbo-0613",
-        "mistralL": "Mistral Large-2402",
-        "mistralS": "Mistral Small-2402",
-        "llama": "Meta Llama3-70b",
+        # models
+        "anthropic.claude-instant-v1": "Claude Instant",
+        "anthropic.claude-3-sonnet-20240229-v1:0": "Claude Sonnet",
+        "anthropic.claude-3-haiku-20240307-v1:0": "Claude Haiku",
+        "openai.gpt-3.5-turbo-0613": "GPT 3.5-Turbo-0613",
+        "mistral.mistral-large-2402-v1:0": "Mistral Large-2402",
+        "mistral.mistral-small-2402-v1:0": "Mistral Small-2402",
+        "meta.llama3-70b-instruct-v1:0": "Meta Llama3-70b",
+        # prompt configs
         "formal_language": "Formal Language",
         "plain_language": "Plain Language",
         "baseline": "Base Prompt",
